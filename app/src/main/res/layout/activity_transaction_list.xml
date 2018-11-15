@@ -13,5 +13,13 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"/>
+        android:text="@string/account_selection_hint"
+        android:id="@+id/account_selection_hint"/>
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:layout_below="@+id/account_selection_hint"
+        android:layout_alignParentStart="true"/>
 </RelativeLayout>

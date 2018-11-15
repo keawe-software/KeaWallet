@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">KeaWallet</string>
+    <string name="account_selection_hint">Sto start adding a new bank account to the app, select your credit institute below:</string>
 </resources>
