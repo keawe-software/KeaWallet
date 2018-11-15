@@ -50,7 +50,7 @@ public class AddAccount extends AppCompatActivity {
     public void addInstituteList(){
         if (institutes == null) try {
             institutes = CreditInstitute.getList(getAssets(), CreditInstitute.HBCI_ONLY);
-            institutes.insertElementAt(new CreditInstitute(null,getString(R.string.institute_dropdown_initial),null,null,null),0);
+            institutes.insertElementAt(new CreditInstitute(null,getString(R.string.institute_dropdown_initial),null,null,null,null),0);
             CreditInstitute[] inst_arr = institutes.toArray(new CreditInstitute[institutes.size()]);
             ArrayAdapter<CreditInstitute> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, inst_arr);
             AutoCompleteTextView instituteSelector = (AutoCompleteTextView) findViewById(R.id.institute_selector);

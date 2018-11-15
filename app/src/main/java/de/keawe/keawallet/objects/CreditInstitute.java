@@ -11,14 +11,20 @@ import java.util.Vector;
 
 public class CreditInstitute {
     public static final boolean HBCI_ONLY = true;
-    private final String bic,blz,location,name,url;
+    private final String bic;
+    public final String blz;
+    private final String location;
+    private final String name;
+    private final String url;
+    private final String version;
 
-    public CreditInstitute(String blz,String name, String location, String bic, String hbciUrl){
+    public CreditInstitute(String blz,String name, String location, String bic, String hbciUrl,String hbciVersion){
         this.name=name;
         this.blz=blz;
         this.location=location;
         this.bic=bic;
         this.url=hbciUrl;
+        this.version=hbciVersion;
     }
 
     public static Vector<CreditInstitute> getList(AssetManager assets) throws IOException {
@@ -38,7 +44,8 @@ public class CreditInstitute {
             String location = parts[1];
             String bic = parts[2];
             String hbciUrl = parts[5];
-            if (!hbciOnly || !hbciUrl.isEmpty()) institutes.add(new CreditInstitute(blz, name, location, bic, hbciUrl));
+            String hbciVersion = parts[7];
+            if (!hbciOnly || !hbciUrl.isEmpty()) institutes.add(new CreditInstitute(blz, name, location, bic, hbciUrl, hbciVersion));
         }
         reader.close();
         Collections.sort(institutes, CreditInstitute.comparator());
@@ -66,5 +73,13 @@ public class CreditInstitute {
 
     public boolean hasUrl() {
         return this.url != null;
+    }
+
+    public int port() {
+        return url.startsWith("https:")?443:80;
+    }
+
+    public String getHBCIVersion() {
+        return version;
     }
 }
