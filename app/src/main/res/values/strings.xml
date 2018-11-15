@@ -3,4 +3,7 @@
     <string name="account_selection_hint">Sto start adding a new bank account to the app, select your credit institute below:</string>
     <string name="placeholder_main">Hier sollte später ein Dropdaown zur Auswahl der Konten sowie die Transaktions-Liste erscheinen</string>
     <string name="institutes_read_error">Was no able to read the list of credit institutes.</string>
+    <string name="instittue_login_hint">Your login name</string>
+    <string name="institute_password_hint">Your login password / PIN</string>
+    <string name="institute_dropdown_initial">Select an institute from this list!</string>
 </resources>
