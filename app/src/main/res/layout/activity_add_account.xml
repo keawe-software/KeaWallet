@@ -63,5 +63,14 @@
             android:id="@+id/institute_password_hint"
             android:layout_alignBottom="@+id/institute_password"
             android:layout_toEndOf="@+id/institute_password"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_account_btm"
+            android:id="@+id/add_account_button"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:enabled="false"/>
     </RelativeLayout>
 </RelativeLayout>

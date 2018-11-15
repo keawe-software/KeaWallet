@@ -49,7 +49,7 @@ public class CreditInstitute {
         return new Comparator<CreditInstitute>() {
             @Override
             public int compare(CreditInstitute lhs, CreditInstitute rhs) {
-                return lhs.name.compareTo(rhs.name);
+                return (lhs.name+lhs.blz).compareTo(rhs.name+rhs.blz); // sortby name and blz
             }
         };
     }

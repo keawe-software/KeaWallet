@@ -6,4 +6,5 @@
     <string name="instittue_login_hint">Your login name</string>
     <string name="institute_password_hint">Your login password / PIN</string>
     <string name="institute_dropdown_initial">Select an institute from this list!</string>
+    <string name="add_account_btm">Add account</string>
 </resources>
