@@ -300,7 +300,6 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
     }
 
 
-
-
-
+    public void check() {
+    }
 }

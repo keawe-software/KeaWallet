@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">KeaWallet</string>
-    <string name="account_selection_hint">Sto start adding a new bank account to the app, select your credit institute below:</string>
+    <string name="account_selection_hint">To start adding a new bank account to the app, select your credit institute below:</string>
     <string name="placeholder_main">Hier sollte später ein Dropdaown zur Auswahl der Konten sowie die Transaktions-Liste erscheinen</string>
     <string name="institutes_read_error">Was no able to read the list of credit institutes.</string>
     <string name="instittue_login_hint">Your login name</string>
@@ -10,4 +10,5 @@
     <string name="invalid_credit_institute">Invalud credit institute</string>
     <string name="user_must_not_be_empty">User field must not be empty!</string>
     <string name="secret_must_not_be_empty">You must give a secret!</string>
+    <string name="conect_info">Trying to connect to server...</string>
 </resources>

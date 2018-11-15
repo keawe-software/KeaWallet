@@ -6,9 +6,10 @@ import org.kapott.hbci.manager.HBCIHandler;
 
 public class Globals {
 
-    private static Context appContext = null;
+    public static Context appContext = null;
     public static HBCIHandler hbciHandler = null;
     public static CreditInstitute currentInstitute = null;
+
     public static Context context(){
         if (appContext==null) throw new NullPointerException("Please call Globals.setContext(...) first");
         return appContext;
