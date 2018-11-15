@@ -8,9 +8,9 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
@@ -53,7 +53,7 @@ public class AddAccount extends AppCompatActivity {
             institutes.insertElementAt(new CreditInstitute(null,getString(R.string.institute_dropdown_initial),null,null,null),0);
             CreditInstitute[] inst_arr = institutes.toArray(new CreditInstitute[institutes.size()]);
             ArrayAdapter<CreditInstitute> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, inst_arr);
-            Spinner instituteSelector = (Spinner) findViewById(R.id.instituteSelector);
+            AutoCompleteTextView instituteSelector = (AutoCompleteTextView) findViewById(R.id.institute_selector);
             instituteSelector.setAdapter(adapter);
 
         } catch (IOException e) {
@@ -109,21 +109,17 @@ public class AddAccount extends AppCompatActivity {
     }
 
     public void setListeners(){
-        Spinner instituteSelector = (Spinner) findViewById(R.id.instituteSelector);
-        instituteSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        AutoCompleteTextView instituteSelector = (AutoCompleteTextView) findViewById(R.id.institute_selector);
+        instituteSelector.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                CreditInstitute institute = institutes.get(position);
-                findViewById(R.id.institute_credentials_form).setVisibility(institute.hasUrl() ? View.VISIBLE : View.INVISIBLE);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // TODO: implement onNothingSelected
-
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Object item = parent.getItemAtPosition(position);
+                if (item instanceof CreditInstitute){
+                    CreditInstitute institute =(CreditInstitute) item;
+                    findViewById(R.id.institute_credentials_form).setVisibility(institute.hasUrl() ? View.VISIBLE : View.INVISIBLE);
+                }
             }
         });
-
 
         TextWatcher textWatcher = new TextWatcher() {
             @Override

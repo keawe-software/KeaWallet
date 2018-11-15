@@ -16,22 +16,21 @@
         android:text="@string/account_selection_hint"
         android:id="@+id/account_selection_hint"/>
 
-    <Spinner
+    <AutoCompleteTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/instituteSelector"
+        android:id="@+id/institute_selector"
         android:layout_below="@+id/account_selection_hint"
-        android:layout_alignParentStart="true"/>
-
-
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/account_selection_hint"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:id="@+id/institute_credentials_form"
-        android:visibility="visible"
-        android:layout_below="@+id/instituteSelector">
+        android:visibility="invisible"
+        android:layout_below="@+id/institute_selector">
         <EditText
             android:layout_width="200dp"
             android:layout_height="wrap_content"
