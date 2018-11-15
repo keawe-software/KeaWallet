@@ -21,6 +21,10 @@ android {
 }
 
 dependencies {
+    compile 'com.github.hbci4j:hbci4j-core:+'
+}
+
+dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:22.2.1'

@@ -1,3 +1,0 @@
-[submodule "libs/hbci"]
-	path = app/libs/hbci
-	url = https://github.com/hbci4j/hbci4java
