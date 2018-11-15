@@ -5,6 +5,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
+
+import java.io.IOException;
+
+import de.keawe.keawallet.objects.CreditInstitute;
 
 public class TransactionList extends AppCompatActivity {
 
@@ -20,6 +25,16 @@ public class TransactionList extends AppCompatActivity {
                 gotoAddAccount(v);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            CreditInstitute[] institutes = CreditInstitute.getList(getAssets());
+        } catch (IOException e) {
+            Toast.makeText(this,R.string.institutes_read_error, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void gotoAddAccount(View v) {
