@@ -9,7 +9,6 @@ import java.util.Properties;
 public class HBCIProperties extends Properties {
 	public HBCIProperties(){
 		super();
-
 		setProperty("client.passport.default", "PinTan");
 		setProperty("log.loglevel.default", "1");
     }

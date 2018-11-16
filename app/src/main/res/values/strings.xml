@@ -10,5 +10,10 @@
     <string name="invalid_credit_institute">Invalud credit institute</string>
     <string name="user_must_not_be_empty">User field must not be empty!</string>
     <string name="secret_must_not_be_empty">You must give a secret!</string>
-    <string name="conect_info">Trying to connect to server...</string>
+    <string name="connect_info">Trying to connect to server...</string>
+    <string name="check_data_info">Checking credentials...</string>
+    <string name="failed">failed</string>
+    <string name="success">success</string>
+    <string name="account_info">Found Account:</string>
+    <string name="account_summary">Found %1$d accounts.</string>
 </resources>

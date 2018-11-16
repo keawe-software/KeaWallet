@@ -1,13 +1,10 @@
 package de.keawe.keawallet;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,11 +18,12 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.Vector;
 
+import de.keawe.keawallet.objects.AccountSetupListener;
 import de.keawe.keawallet.objects.CreditInstitute;
-import de.keawe.keawallet.objects.Globals;
+import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
 
-public class AddAccount extends AppCompatActivity {
+public class AddAccount extends AppCompatActivity implements AccountSetupListener {
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -41,6 +39,8 @@ public class AddAccount extends AppCompatActivity {
         setContentView(R.layout.activity_add_account);
         addInstituteList();
         setListeners();
+
+
     }
 
     @Override
@@ -63,12 +63,12 @@ public class AddAccount extends AppCompatActivity {
         checkView.setVisibility(View.VISIBLE);
 
         if (!checkRunning) {
-
+            final AccountSetupListener listener = this;
             checkRunning = true;
             AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(Void... params) {
-                    bankLogin.findAccounts();// this method performs the actual hbci task
+                    bankLogin.findAccounts(listener);// this method performs the actual hbci task
                     checkRunning = false;
                     return null;
                 }
@@ -130,15 +130,45 @@ public class AddAccount extends AppCompatActivity {
         EditText loginPassword = (EditText) findViewById(R.id.institute_password);
         loginPassword.addTextChangedListener(textWatcher);
 
-        Button addAccountBtn = (Button) findViewById(R.id.add_account_button);
+        final Button addAccountBtn = (Button) findViewById(R.id.add_account_button);
         addAccountBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                addAccountBtn.setEnabled(false);
                 accountButtonClicked();
             }
         });
-
     }
 
+    @Override
+    public void notifyHandlerCreated(boolean success) {
+        TextView tv = (TextView) findViewById(R.id.check_data_state);
+        tv.setText(getText(R.string.check_data_info)+""+getText(success?R.string.success:R.string.failed));
+    }
 
+    @Override
+    public void notifyLoggedIn(boolean success) {
+        TextView tv = (TextView) findViewById(R.id.server_connect_state);
+        tv.setText(getText(R.string.connect_info)+""+getText(success?R.string.success:R.string.failed));
+    }
+
+    @Override
+    public void notifyJobDone(boolean success) {
+        if (success) {
+        } else {
+            findViewById(R.id.add_account_button).setEnabled(true);
+        }
+    }
+
+    @Override
+    public void notifyAccount(String accountNumber, String saldoString, String currency) {
+        TextView tv = (TextView) findViewById(R.id.account_state);
+        tv.setText(getText(R.string.account_info)+" "+accountNumber+" ("+saldoString+" "+currency+")");
+    }
+
+    @Override
+    public void notifyFoundAccounts(Vector<BankAccount> accounts) {
+        TextView tv = (TextView) findViewById(R.id.account_state);
+        tv.setText(String.format(getString(R.string.account_summary),accounts.size()));
+    }
 }

@@ -20,12 +20,12 @@ public class TransactionList extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gotoAddAccount(v);
+                gotoAddAccount();
             }
         });
     }
 
-    private void gotoAddAccount(View v) {
+    private void gotoAddAccount() {
         Intent addAccount = new Intent(this,AddAccount.class);
         startActivity(addAccount);
     }
@@ -34,4 +34,9 @@ public class TransactionList extends AppCompatActivity {
         Globals.appContext=getApplicationContext();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        gotoAddAccount();
+    }
 }

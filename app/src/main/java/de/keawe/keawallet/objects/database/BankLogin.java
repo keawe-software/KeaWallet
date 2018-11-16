@@ -1,5 +1,7 @@
 package de.keawe.keawallet.objects.database;
 
+import android.provider.Settings;
+
 import org.kapott.hbci.GV.HBCIJob;
 import org.kapott.hbci.GV_Result.HBCIJobResult;
 import org.kapott.hbci.callback.HBCICallbackConsole;
@@ -9,17 +11,26 @@ import org.kapott.hbci.manager.HBCIUtils;
 import org.kapott.hbci.manager.HBCIUtilsInternal;
 import org.kapott.hbci.passport.HBCIPassport;
 import org.kapott.hbci.structures.Konto;
+import org.xml.sax.SAXException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
 import java.util.Properties;
 import java.util.Vector;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
+import de.keawe.keawallet.objects.AccountSetupListener;
 import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.HBCIProperties;
 import de.keawe.keawallet.objects.PinTanPass;
 import de.keawe.keawallet.R;
 import de.keawe.keawallet.objects.CreditInstitute;
+import de.keawe.keawallet.objects.XmlSanitizer;
+import de.keawe.keawallet.objects.overrides.AndroidHBCIHandler;
 
 /**
  * Klasse für Logindaten zum Zugang zu einer Bank
@@ -30,10 +41,6 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
     private static final String COUNTRY = "DE";
     private static final String FILTER = "Base64";
     private static final String SECMECH = "997";
-    public static final String LID = "lid";
-    private static final String BLZ = "blz";
-    private static final String LOGIN = "login";
-    private static final String PIN = "pin";
     private Vector<BankAccount> accounts = null;
     private String login;
     private String pin;
@@ -100,15 +107,21 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
 
     /**
      * sucht nach Konten, die zum vorliegenden Login gehören
+     * @param listener
      */
-    public void findAccounts() {
+    public void findAccounts(AccountSetupListener listener) {
         try {
             initHBCIHandler(); // ggf. Erzuegen eines neuen Handlers
-        } catch (HBCI_Exception he) { // Erzuegen des Handlers fehlgeschlagen?
-            he.printStackTrace();
+            listener.notifyHandlerCreated(true);
+        } catch (Exception e) { // Erzuegen des Handlers fehlgeschlagen?
+            e.printStackTrace();
+            listener.notifyHandlerCreated(false);
+            listener.notifyLoggedIn(false);
+            listener.notifyJobDone(false);
             return;
         }
 
+        listener.notifyLoggedIn(true); // beim Erzuegen des Handlers erfolgt auch schon die Anmeldung an der Bank. D.h. erfolgreich erzeugter Handler == erfolgreicher Login
         Konto[] accs = Globals.hbciHandler.getPassport().getAccounts();  // Das Passport-Element enthält zu diesem Zeitpunkt schon eine Liste der gefundenen Konten
         try {
             for (Konto acc : accs) { // gefundene Konten inspizieren
@@ -121,16 +134,23 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
                     Properties data = result.getResultData();
 
                     String accountNumber = data.get("content.KTV.number").toString(); // Kontonummer
+
                     String saldoString = data.get("content.booked.CreditDebit").equals("D") ? "-" : ""; // Soll oder Haben?
                     String currency = data.get("content.curr").toString(); // Währung
                     saldoString += data.get("content.booked.BTG.value"); // Kontostand
+                    listener.notifyAccount(accountNumber,saldoString,currency);
                     BankAccount bankAccount = new BankAccount(this, accountNumber, currency); // neues Konto mit den getesteten Daten anlegen
                     accounts.add(bankAccount); // neues Konto zu den Konten des Logins hinzufügen (aber nicht speichern)
                 }
             }
-        } catch (HBCI_Exception he) {
-            he.printStackTrace();
-            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (accounts.isEmpty()) { // falls keine Konten gefunden wurden
+            listener.notifyJobDone(false); // aktiviert den Zurück-Knopf
+        } else {
+            listener.notifyFoundAccounts(accounts);
+            listener.notifyJobDone(true); // aktiviert die Auswahlliste und den Speichern-Knopf
         }
     }
 
@@ -246,13 +266,13 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
     /**
      * initialisiert ggf. den HBCIHandler zur Nutzung mit Online-Abfragen
      */
-    private void initHBCIHandler() {
+    private void initHBCIHandler() throws IOException, TransformerException, SAXException, ParserConfigurationException {
         if (Globals.currentInstitute != institute) {
             cleanup();
         }
         if (Globals.hbciHandler == null) {
             HBCIUtils.init(new HBCIProperties(), this);
-            Globals.hbciHandler = new HBCIHandler(institute.getHBCIVersion(), new PinTanPass());
+            Globals.hbciHandler = new AndroidHBCIHandler(institute.getHBCIVersion(), new PinTanPass(),Globals.context().getAssets());
             Globals.currentInstitute = institute;
         }
     }
@@ -263,7 +283,7 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
      * @param props weitere Settings für den JOb
      * @return das HBCIJobResult (Ergebnis) des ausgeführten Jobs
      */
-    public HBCIJobResult executeJob(String jobName, Properties props) {
+    public HBCIJobResult executeJob(String jobName, Properties props) throws IOException, ParserConfigurationException, TransformerException, SAXException {
         initHBCIHandler(); // HBCI-Handler initialisieren, wenn er nicht schon bereit ist
         HBCIJob job = Globals.hbciHandler.newJob(jobName); // neuen Job anlegen
         for (Object key : props.keySet()) { // Parameter des Jobs setzen
@@ -299,7 +319,4 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
         this.pin = pin;
     }
 
-
-    public void check() {
-    }
 }
