@@ -1,12 +1,11 @@
 package de.keawe.keawallet.objects.database;
 
-import android.provider.Settings;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 import org.kapott.hbci.GV.HBCIJob;
 import org.kapott.hbci.GV_Result.HBCIJobResult;
 import org.kapott.hbci.callback.HBCICallbackConsole;
-import org.kapott.hbci.exceptions.HBCI_Exception;
-import org.kapott.hbci.manager.HBCIHandler;
 import org.kapott.hbci.manager.HBCIUtils;
 import org.kapott.hbci.manager.HBCIUtilsInternal;
 import org.kapott.hbci.passport.HBCIPassport;
@@ -14,7 +13,6 @@ import org.kapott.hbci.structures.Konto;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
 import java.util.Properties;
@@ -29,14 +27,13 @@ import de.keawe.keawallet.objects.HBCIProperties;
 import de.keawe.keawallet.objects.PinTanPass;
 import de.keawe.keawallet.R;
 import de.keawe.keawallet.objects.CreditInstitute;
-import de.keawe.keawallet.objects.XmlSanitizer;
 import de.keawe.keawallet.objects.overrides.AndroidHBCIHandler;
 
 /**
  * Klasse für Logindaten zum Zugang zu einer Bank
  * Created by srichter on 19.08.15.
  */
-public class BankLogin extends HBCICallbackConsole implements Serializable {
+public class BankLogin extends HBCICallbackConsole  {
 
     private static final String COUNTRY = "DE";
     private static final String FILTER = "Base64";
@@ -69,17 +66,6 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
         this.pin = pin;
     }
 
-    public BankLogin() {
-    }
-
-
-
-
-
-
-
-
-
     @Override
     /**
      * liefert eine einfache String-Repräsentation der vorliegenden Instanz
@@ -109,7 +95,7 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
      * sucht nach Konten, die zum vorliegenden Login gehören
      * @param listener
      */
-    public void findAccounts(AccountSetupListener listener) {
+    public Vector<BankAccount> findAccounts(AccountSetupListener listener) {
         try {
             initHBCIHandler(); // ggf. Erzuegen eines neuen Handlers
             listener.notifyHandlerCreated(true);
@@ -118,7 +104,7 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
             listener.notifyHandlerCreated(false);
             listener.notifyLoggedIn(false);
             listener.notifyJobDone(false);
-            return;
+            return null;
         }
 
         listener.notifyLoggedIn(true); // beim Erzuegen des Handlers erfolgt auch schon die Anmeldung an der Bank. D.h. erfolgreich erzeugter Handler == erfolgreicher Login
@@ -152,6 +138,7 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
             listener.notifyFoundAccounts(accounts);
             listener.notifyJobDone(true); // aktiviert die Auswahlliste und den Speichern-Knopf
         }
+        return accounts;
     }
 
     @Override
@@ -319,4 +306,7 @@ public class BankLogin extends HBCICallbackConsole implements Serializable {
         this.pin = pin;
     }
 
+    public void saveToDb() {
+        System.out.println("BankLogin.saveToDb not implemented");
+    }
 }

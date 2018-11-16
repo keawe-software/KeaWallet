@@ -1,5 +1,6 @@
 package de.keawe.keawallet;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,12 +17,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.Vector;
 
 import de.keawe.keawallet.objects.AccountSetupListener;
 import de.keawe.keawallet.objects.CreditInstitute;
+import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Settings;
 
 public class AddAccount extends AppCompatActivity implements AccountSetupListener {
 
@@ -29,9 +33,14 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    Vector<CreditInstitute> institutes = null;
+
     private CreditInstitute selectedInstitute =null;
     private boolean checkRunning = false;
+    private Vector<BankAccount> accounts;
+    BankLogin bankLogin = null;
+    private final static int REQUESTING_PASSWORD = 1;
+    private final static int IDLE = 0;
+    private static int state = IDLE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +48,6 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
         setContentView(R.layout.activity_add_account);
         addInstituteList();
         setListeners();
-
-
     }
 
     @Override
@@ -52,13 +59,15 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
 
         RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
         checkView.setVisibility(View.INVISIBLE);
+
+        if (state ==REQUESTING_PASSWORD) storeLoginAndAccounts();
     }
 
     public void accountButtonClicked(){
         String login = ((TextView) findViewById(R.id.institute_login)).getText().toString();
         String secret = ((TextView) findViewById(R.id.institute_password)).getText().toString();
 
-        final BankLogin bankLogin = new BankLogin(selectedInstitute, login, secret);
+        bankLogin = new BankLogin(selectedInstitute, login, secret);
         RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
         checkView.setVisibility(View.VISIBLE);
 
@@ -66,26 +75,55 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
             final AccountSetupListener listener = this;
             checkRunning = true;
             AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+
+
                 @Override
                 protected Void doInBackground(Void... params) {
-                    bankLogin.findAccounts(listener);// this method performs the actual hbci task
+                    accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
                     checkRunning = false;
                     return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    super.onPostExecute(aVoid);
+                    storeLoginAndAccounts();
                 }
             };
             task.execute();
         }
     }
 
+    private void storeLoginAndAccounts() {
+        String key = getOrCreateEncryptionKey();
+        if (key == null) {
+            state=REQUESTING_PASSWORD;
+            return; // password dialog will be started from getOrCreateEncryptionKey
+        }
+        System.out.println("Using encryption key '"+key+"'");
+        System.out.println("Storing login: "+bankLogin );
+        for (BankAccount account:accounts){
+            System.out.println("Storing account: "+account);
+        }
+        state=IDLE;
+    }
+
+    private String getOrCreateEncryptionKey() {
+        if (Globals.encryption_key == null){
+            Intent passwordDialog = new Intent(this,PasswordDialog.class);
+            startActivity(passwordDialog);
+        }
+        return Globals.encryption_key;
+    }
+
     public void addInstituteList(){
-        if (institutes == null) try {
-            institutes = CreditInstitute.getList(getAssets(), CreditInstitute.HBCI_ONLY);
+        try {
+            Vector<CreditInstitute> institutes = CreditInstitute.getList(getAssets(), CreditInstitute.HBCI_ONLY);
             institutes.insertElementAt(new CreditInstitute(null,getString(R.string.institute_dropdown_initial),null,null,null,null),0);
             CreditInstitute[] inst_arr = institutes.toArray(new CreditInstitute[institutes.size()]);
             ArrayAdapter<CreditInstitute> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, inst_arr);
             AutoCompleteTextView instituteSelector = (AutoCompleteTextView) findViewById(R.id.institute_selector);
             instituteSelector.setAdapter(adapter);
-
         } catch (IOException e) {
             Toast.makeText(this, R.string.institutes_read_error, Toast.LENGTH_LONG).show();
         }

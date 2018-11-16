@@ -22,8 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/account_selection_hint"
         android:layout_alignEnd="@+id/account_selection_hint"
-        android:layout_alignParentStart="true"
-        android:text="Spard" />
+        android:layout_alignParentStart="true" />
 
     <RelativeLayout
         android:id="@+id/institute_credentials_form"

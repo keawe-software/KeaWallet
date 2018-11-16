@@ -31,4 +31,7 @@ public class BankAccount {
         return "Konto " + accountNumber + ": "+currency;
     }
 
+    public void saveToDb() {
+        System.out.println("BankAccount.saveToDb not implemented");
+    }
 }

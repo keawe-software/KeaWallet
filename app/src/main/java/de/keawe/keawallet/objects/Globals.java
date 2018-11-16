@@ -6,9 +6,11 @@ import org.kapott.hbci.manager.HBCIHandler;
 
 public class Globals {
 
+    public static final String APP_NAME = "KeaWallet";
     public static Context appContext = null;
     public static HBCIHandler hbciHandler = null;
     public static CreditInstitute currentInstitute = null;
+    public static String encryption_key = null;
 
     public static Context context(){
         if (appContext==null) throw new NullPointerException("Please call Globals.setContext(...) first");

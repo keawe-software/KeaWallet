@@ -33,10 +33,4 @@ public class TransactionList extends AppCompatActivity {
     private void setGlobals() {
         Globals.appContext=getApplicationContext();
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        gotoAddAccount();
-    }
 }
