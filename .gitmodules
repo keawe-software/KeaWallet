@@ -1,3 +1,6 @@
 [submodule "hbci"]
 	path = hbci
 	url = https://github.com/hbci4j/hbci4java
+[submodule "iban4h"]
+	path = iban4j
+	url = https://github.com/arturmkrtchyan/iban4j

@@ -57,7 +57,7 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
 
                 @Override
                 protected Void doInBackground(Void... params) {
-                    //accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
+                    accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
                     checkRunning = false;
                     return null;
                 }
@@ -74,7 +74,7 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
 
     public void addInstituteList(){
         try {
-            Vector<CreditInstitute> institutes = CreditInstitute.getList(getAssets(), CreditInstitute.HBCI_ONLY);
+            Vector<CreditInstitute> institutes = CreditInstitute.getList(CreditInstitute.HBCI_ONLY);
             institutes.insertElementAt(new CreditInstitute(null,getString(R.string.institute_dropdown_initial),null,null,null,null),0);
             CreditInstitute[] inst_arr = institutes.toArray(new CreditInstitute[institutes.size()]);
             ArrayAdapter<CreditInstitute> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, inst_arr);
@@ -143,6 +143,7 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     @Override
     protected void onResume() {
         super.onResume();
+        Globals.d("Resuming AddAccount. State = "+(state==REQUESTING_PASSWORD?"REQUESTING PASSWORD":(state==IDLE?"IDLE":"UNKNOWN")));
 
         RelativeLayout credentialsForm = (RelativeLayout) findViewById(R.id.institute_credentials_form);
         credentialsForm.setVisibility(View.INVISIBLE);
@@ -150,7 +151,7 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
         RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
         checkView.setVisibility(View.INVISIBLE);
 
-        if (state ==REQUESTING_PASSWORD) storeLoginAndAccounts();
+        if (state == REQUESTING_PASSWORD) storeLoginAndAccounts();
     }
 
     public void setListeners(){
@@ -202,12 +203,12 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
             return; // password dialog will be started from getOrCreateEncryptionKey
         }
         try {
-            System.out.println("Storing login: " + bankLogin);
-
             bankLogin.saveToDb();
-            /*for (BankAccount account : accounts) {
-                System.out.println("Storing account: " + account);
-            }*/
+            for (BankAccount account : accounts) {
+                account.saveToDb();
+            }
+            Intent fetchTransactions = new Intent(this,FetchTransactions.class);
+            startActivity(fetchTransactions);
         } catch (Exception e){
             e.printStackTrace();
         }

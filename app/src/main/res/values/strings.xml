@@ -23,4 +23,9 @@
     <string name="store_password">Store password</string>
     <string name="wrong_password">The password you entered is incorrect!</string>
     <string name="fetch_transactions">fetch transactions</string>
+    <string name="fetch_title">KeaWallet - fetching transactions</string>
+    <string name="password_title">KeaWallet - Password required</string>
+    <string name="no_accouts">No bank accounts found!</string>
+    <string name="enter_password">Enter password to unlock the account database.</string>
+    <string name="unlock_database">Unlock the databse</string>
 </resources>

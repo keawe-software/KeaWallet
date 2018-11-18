@@ -1,9 +1,7 @@
 package de.keawe.keawallet.objects;
 
 import android.annotation.TargetApi;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
@@ -17,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
 import de.keawe.keawallet.objects.database.Settings;
 
@@ -32,33 +31,26 @@ public class Globals {
     private final static String ENCRYPTION_ALGORITHM = "AES";
     public static final int DB_VERSION = 1;
 
+    public static void d(String s) {
+        Log.d(APP_NAME,s);
+    }
+
     public static class DBHelper extends SQLiteOpenHelper{
 
         public DBHelper() {
             super(Globals.context(), Globals.APP_NAME, null, Globals.DB_VERSION);
-            System.out.println("Creating DBHelper. Should invoke onCreate");
         }
 
         @Override
         public void onCreate(SQLiteDatabase sqLiteDatabase) {
             sqLiteDatabase.execSQL(BankLogin.TABLE_CREATION);
             sqLiteDatabase.execSQL(Settings.TABLE_CREATION);
+            sqLiteDatabase.execSQL(BankAccount.TABLE_CREATION);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
 
-        }
-
-        public void insert(String table, ContentValues values) {
-            SQLiteDatabase db = this.getWritableDatabase();
-            System.out.println("Database handle: "+db);
-            db.insert(table,null,values);
-        }
-
-        public Cursor query(String tableName, String[] columns, String select, String[] args) {
-            SQLiteDatabase db = this.getReadableDatabase();
-            return db.query(tableName,columns,select,args,null,null,null);
         }
     }
 
@@ -105,14 +97,12 @@ public class Globals {
     }
 
     public static byte[] encrypt(String s) throws Exception {
-        Log.d(Globals.ENCRYPTION,"Trying to encrypt "+s);
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, encryption_key);
         return cipher.doFinal(s.getBytes());
     }
 
     public static String decrypt(byte[] encryptedBytes) throws Exception {
-        Log.d(Globals.ENCRYPTION,"Trying to decrypt 0x"+Globals.byteArrayToHexString(encryptedBytes));
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, encryption_key);
         return new String(cipher.doFinal(encryptedBytes));
@@ -120,15 +110,12 @@ public class Globals {
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public static byte[] hash(String s) {
-        byte[] bytes = s.getBytes();
-        Log.d(Globals.ENCRYPTION,"Hash of "+s+" is 0x"+byteArrayToHexString(bytes));
-        return hash(bytes);
+        return hash(s.getBytes());
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public static byte[] hash(byte[] bytes) {
         try {
-            Log.d(Globals.ENCRYPTION,"Hashing 0x"+byteArrayToHexString(bytes));
             MessageDigest digest = MessageDigest.getInstance("SHA256");
             digest.update(bytes);
             return digest.digest();
@@ -148,7 +135,12 @@ public class Globals {
         appContext = applicationContext;
     }
 
-    public static DBHelper database(){
-        return new DBHelper();
+    public static SQLiteDatabase writableDatabase(){
+        return new DBHelper().getWritableDatabase();
     }
+
+    public static SQLiteDatabase readableDatabase(){
+        return new DBHelper().getReadableDatabase();
+    }
+
 }

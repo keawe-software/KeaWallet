@@ -20,19 +20,17 @@ public class Settings {
 
 
     public static void set(String name, Object value){
-        Globals.DBHelper helper = Globals.database();
         ContentValues values = new ContentValues();
         values.put(KEY,name);
         values.put(VAL,value.toString());
-        helper.insert(TABLE_NAME,values);
+        Globals.writableDatabase().insert(TABLE_NAME,null,values);
     }
 
     public static String getString(String name){
         String[] columns = new String[]{ VAL };
         String select = KEY+"=?";
         String[] args = new String[]{ name };
-        Globals.DBHelper helper = Globals.database();
-        Cursor cursor = helper.query(TABLE_NAME, columns, select, args);
+        Cursor cursor = Globals.readableDatabase().query(TABLE_NAME, columns, select, args, null, null, null);
         if (cursor.getCount()<1) return null;
         cursor.moveToFirst();
         return cursor.getString(0);

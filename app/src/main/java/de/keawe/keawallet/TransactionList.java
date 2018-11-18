@@ -10,6 +10,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 
+import org.iban4j.CountryCode;
+import org.iban4j.Iban;
+
 import de.keawe.keawallet.objects.Globals;
 
 public class TransactionList extends AppCompatActivity {
@@ -47,13 +50,18 @@ public class TransactionList extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.fetch_transactions) {
-            Intent fetchTransactions = new Intent(this,PasswordDialog.class);
+            Intent fetchTransactions = new Intent(this,FetchTransactions.class);
             startActivity(fetchTransactions);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Globals.d("Resuming TransactionList");
     }
 }

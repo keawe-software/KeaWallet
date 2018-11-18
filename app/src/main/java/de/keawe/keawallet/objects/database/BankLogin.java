@@ -1,9 +1,8 @@
 package de.keawe.keawallet.objects.database;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import org.kapott.hbci.GV.HBCIJob;
 import org.kapott.hbci.GV_Result.HBCIJobResult;
@@ -15,20 +14,10 @@ import org.kapott.hbci.structures.Konto;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.util.Properties;
 import java.util.Vector;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
-import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -51,17 +40,17 @@ public class BankLogin extends HBCICallbackConsole  {
     private static final String SECMECH = "997";
     private static final String TABLE_NAME = "bank_logins";
     private static final String KEY = "id";
-    private static final String ENCRYPTED_LOGIN = "encrypted_login";
+    private static final String LOGIN = "encrypted_login";
     private static final String ENCRYPTED_PIN = "encrypted_pin";
     private static final String INSTITUTE = "institute";
-    public static final String TABLE_CREATION = "CREATE TABLE " + TABLE_NAME + " (" + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " + INSTITUTE + " INT NOT NULL, " + ENCRYPTED_LOGIN + " VARCHAR(255), " + ENCRYPTED_PIN + " VARCHAR(255))";
+    public static final String TABLE_CREATION = "CREATE TABLE " + TABLE_NAME + " (" + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " + INSTITUTE + " INT NOT NULL, " + LOGIN + " VARCHAR(255), " + ENCRYPTED_PIN + " VARCHAR(255))";
     private static final String CIPHER = "AES";
     private Vector<BankAccount> accounts = null;
     private String login;
     private String pin;
     private Long id = null;
     private CreditInstitute institute = null;
-
+    private static CreditInstitute activeInstitute;
 
 
     /**
@@ -84,6 +73,45 @@ public class BankLogin extends HBCICallbackConsole  {
         this.accounts = new Vector<BankAccount>();
         this.login = login;
         this.pin = pin;
+    }
+
+    public static Vector<BankLogin> loadAll() {
+        Cursor cursor = Globals.readableDatabase().query(TABLE_NAME, null, null, null, null, null, null);
+        Vector<BankLogin> logins = new Vector<>();
+        while (cursor.moveToNext()){
+            long id =0;
+            String blz = null, login = null, passHex = null;
+
+            for (int index = 0; index < cursor.getColumnCount(); index++){
+                String name = cursor.getColumnName(index);
+                switch (name){
+                    case KEY:
+                        id = cursor.getInt(index);
+                        break;
+                    case LOGIN:
+                        login = cursor.getString(index);
+                        break;
+                    case ENCRYPTED_PIN:
+                        passHex = cursor.getString(index);
+                        break;
+                    case INSTITUTE:
+                        blz = cursor.getString(index);
+                        break;
+
+                }
+            }
+            byte[] passBytes = Globals.hexStringToByteArray(passHex);
+            try {
+                String pin = Globals.decrypt(passBytes);
+                CreditInstitute institute = CreditInstitute.get(blz);
+                BankLogin bankLogin = new BankLogin(institute,login,pin);
+                bankLogin.id = id;
+                logins.add(bankLogin);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return logins;
     }
 
     @Override
@@ -139,7 +167,7 @@ public class BankLogin extends HBCICallbackConsole  {
                 HBCIJobResult result = executeJob("SaldoReq", props); // Saldo des aktuellen Kontos abfragen
                 if (result.isOK()) {
                     Properties data = result.getResultData();
-
+                    System.out.println(data);
                     String accountNumber = data.get("content.KTV.number").toString(); // Kontonummer
 
                     String saldoString = data.get("content.booked.CreditDebit").equals("D") ? "-" : ""; // Soll oder Haben?
@@ -148,6 +176,7 @@ public class BankLogin extends HBCICallbackConsole  {
                     listener.notifyAccount(accountNumber,saldoString,currency);
                     BankAccount bankAccount = new BankAccount(this, accountNumber, currency); // neues Konto mit den getesteten Daten anlegen
                     accounts.add(bankAccount); // neues Konto zu den Konten des Logins hinzufügen (aber nicht speichern)
+                    System.out.println(bankAccount);
                 }
             }
         } catch (Exception e) {
@@ -239,16 +268,6 @@ public class BankLogin extends HBCICallbackConsole  {
         }
     }
 
-
-
-    /**
-     * liefert den LoginBenutzername des vorliegenden BankLogins
-     * @return
-     */
-    public String getLogin() {
-        return login;
-    }
-
     /**
      * liefert Passwort/Pin des vorliegenden BankLogins
      * @return
@@ -277,13 +296,13 @@ public class BankLogin extends HBCICallbackConsole  {
      * initialisiert ggf. den HBCIHandler zur Nutzung mit Online-Abfragen
      */
     private void initHBCIHandler() throws IOException, TransformerException, SAXException, ParserConfigurationException {
-        if (Globals.currentInstitute != institute) {
+        if (activeInstitute != institute) {
             cleanup();
         }
         if (Globals.hbciHandler == null) {
             HBCIUtils.init(new HBCIProperties(), this);
             Globals.hbciHandler = new AndroidHBCIHandler(institute.getHBCIVersion(), new PinTanPass(),Globals.context().getAssets());
-            Globals.currentInstitute = institute;
+            activeInstitute = institute;
         }
     }
 
@@ -296,29 +315,14 @@ public class BankLogin extends HBCICallbackConsole  {
     public HBCIJobResult executeJob(String jobName, Properties props) throws IOException, ParserConfigurationException, TransformerException, SAXException {
         initHBCIHandler(); // HBCI-Handler initialisieren, wenn er nicht schon bereit ist
         HBCIJob job = Globals.hbciHandler.newJob(jobName); // neuen Job anlegen
+        HBCIUtils.setParam("client.errors.ignoreWrongJobDataErrors","yes"); // do not fail, when bic ist set without being required
         for (Object key : props.keySet()) { // Parameter des Jobs setzen
             job.setParam(key.toString(), props.get(key).toString());
         }
         job.addToQueue(); // Job zur Ausführung vormerken
+
         Globals.hbciHandler.execute(); // vorgemerkte Jobs ausführen
         return job.getJobResult();
-    }
-
-    /**
-     * setzt das Institut des vorliegenden BankLogins
-     * @param institute
-     */
-    public void setInstitute(CreditInstitute institute) {
-        this.institute = institute;
-
-    }
-
-    /**
-     * Setzt die Login-Benutzerkennung des vorliegenden BankLogins
-     * @param login
-     */
-    public void setLogin(String login) {
-        this.login = login;
     }
 
     /**
@@ -330,11 +334,16 @@ public class BankLogin extends HBCICallbackConsole  {
     }
 
     public void saveToDb() throws Exception {
-        Globals.DBHelper database = Globals.database();
+        Globals.d("Saving Bankaccount"+this);
         ContentValues values = new ContentValues();
-        values.put(ENCRYPTED_LOGIN,login);
-        values.put(ENCRYPTED_PIN,Globals.encrypt(pin));
+        values.put(LOGIN,login);
+        values.put(ENCRYPTED_PIN,Globals.byteArrayToHexString(Globals.encrypt(pin)));
         values.put(INSTITUTE,institute.blz);
-        database.insert(TABLE_NAME,values);
+        SQLiteDatabase db = Globals.writableDatabase();
+        this.id = db.insert(TABLE_NAME, null, values);
+    }
+
+    public Vector<BankAccount> accounts() {
+        return BankAccount.load(this);
     }
 }

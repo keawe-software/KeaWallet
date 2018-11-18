@@ -11,7 +11,7 @@ import java.util.Vector;
 
 public class CreditInstitute {
     public static final boolean HBCI_ONLY = true;
-    private final String bic;
+    public final String bic;
     public final String blz;
     private final String location;
     private final String name;
@@ -27,12 +27,12 @@ public class CreditInstitute {
         this.version=hbciVersion;
     }
 
-    public static Vector<CreditInstitute> getList(AssetManager assets) throws IOException {
-        return getList(assets,false);
+    public static Vector<CreditInstitute> getList() throws IOException {
+        return getList(false);
     }
 
-    public static Vector<CreditInstitute> getList(AssetManager assets, boolean hbciOnly) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(assets.open("blz.properties")));
+    public static Vector<CreditInstitute> getList(boolean hbciOnly) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(Globals.context().getAssets().open("blz.properties")));
         Vector<CreditInstitute> institutes = new Vector<CreditInstitute>();
 
         String line = null;
@@ -50,6 +50,28 @@ public class CreditInstitute {
         reader.close();
         Collections.sort(institutes, CreditInstitute.comparator());
         return institutes;
+    }
+
+    public static CreditInstitute get(String targetBlz) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(Globals.context().getAssets().open("blz.properties")));
+
+        CreditInstitute result = null;
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("=", 2);
+            String blz = parts[0].trim();
+            if (blz.equals(targetBlz)) {
+               parts = parts[1].split("\\|", -1);
+                String name = parts[0];
+                String location = parts[1];
+                String bic = parts[2];
+                String hbciUrl = parts[5];
+                String hbciVersion = parts[7];
+                result = new CreditInstitute(blz, name, location, bic, hbciUrl, hbciVersion);
+            }
+        }
+        reader.close();
+        return result;
     }
 
     private static Comparator<? super CreditInstitute> comparator() {

@@ -1,1 +1,1 @@
-include ':app', ':hbci'
+include ':app', ':hbci', ':iban4j'
