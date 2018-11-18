@@ -1,7 +1,9 @@
 package de.keawe.keawallet.objects.database;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.kapott.hbci.GV.HBCIJob;
 import org.kapott.hbci.GV_Result.HBCIJobResult;
@@ -13,11 +15,20 @@ import org.kapott.hbci.structures.Konto;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
 import java.util.Properties;
 import java.util.Vector;
 
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -38,11 +49,20 @@ public class BankLogin extends HBCICallbackConsole  {
     private static final String COUNTRY = "DE";
     private static final String FILTER = "Base64";
     private static final String SECMECH = "997";
+    private static final String TABLE_NAME = "bank_logins";
+    private static final String KEY = "id";
+    private static final String ENCRYPTED_LOGIN = "encrypted_login";
+    private static final String ENCRYPTED_PIN = "encrypted_pin";
+    private static final String INSTITUTE = "institute";
+    public static final String TABLE_CREATION = "CREATE TABLE " + TABLE_NAME + " (" + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " + INSTITUTE + " INT NOT NULL, " + ENCRYPTED_LOGIN + " VARCHAR(255), " + ENCRYPTED_PIN + " VARCHAR(255))";
+    private static final String CIPHER = "AES";
     private Vector<BankAccount> accounts = null;
     private String login;
     private String pin;
     private Long id = null;
     private CreditInstitute institute = null;
+
+
 
     /**
      * neuen Bank-Login erzuegen und mit Daten füllen
@@ -96,6 +116,7 @@ public class BankLogin extends HBCICallbackConsole  {
      * @param listener
      */
     public Vector<BankAccount> findAccounts(AccountSetupListener listener) {
+
         try {
             initHBCIHandler(); // ggf. Erzuegen eines neuen Handlers
             listener.notifyHandlerCreated(true);
@@ -218,6 +239,8 @@ public class BankLogin extends HBCICallbackConsole  {
         }
     }
 
+
+
     /**
      * liefert den LoginBenutzername des vorliegenden BankLogins
      * @return
@@ -306,7 +329,12 @@ public class BankLogin extends HBCICallbackConsole  {
         this.pin = pin;
     }
 
-    public void saveToDb() {
-        System.out.println("BankLogin.saveToDb not implemented");
+    public void saveToDb() throws Exception {
+        Globals.DBHelper database = Globals.database();
+        ContentValues values = new ContentValues();
+        values.put(ENCRYPTED_LOGIN,login);
+        values.put(ENCRYPTED_PIN,Globals.encrypt(pin));
+        values.put(INSTITUTE,institute.blz);
+        database.insert(TABLE_NAME,values);
     }
 }

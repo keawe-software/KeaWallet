@@ -22,4 +22,5 @@
     <string name="password_explanation">Surely, you don\'t want your password to be stored in plain text on this device. Thus we need you to set a password to secure you login data:</string>
     <string name="store_password">Store password</string>
     <string name="wrong_password">The password you entered is incorrect!</string>
+    <string name="fetch_transactions">fetch transactions</string>
 </resources>

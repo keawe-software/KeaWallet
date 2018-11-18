@@ -17,15 +17,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.sql.SQLOutput;
 import java.util.Vector;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import de.keawe.keawallet.objects.AccountSetupListener;
 import de.keawe.keawallet.objects.CreditInstitute;
 import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
-import de.keawe.keawallet.objects.database.Settings;
 
 public class AddAccount extends AppCompatActivity implements AccountSetupListener {
 
@@ -42,27 +42,6 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     private final static int IDLE = 0;
     private static int state = IDLE;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_account);
-        addInstituteList();
-        setListeners();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        RelativeLayout credentialsForm = (RelativeLayout) findViewById(R.id.institute_credentials_form);
-        credentialsForm.setVisibility(View.INVISIBLE);
-
-        RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
-        checkView.setVisibility(View.INVISIBLE);
-
-        if (state ==REQUESTING_PASSWORD) storeLoginAndAccounts();
-    }
-
     public void accountButtonClicked(){
         String login = ((TextView) findViewById(R.id.institute_login)).getText().toString();
         String secret = ((TextView) findViewById(R.id.institute_password)).getText().toString();
@@ -76,10 +55,9 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
             checkRunning = true;
             AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
 
-
                 @Override
                 protected Void doInBackground(Void... params) {
-                    accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
+                    //accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
                     checkRunning = false;
                     return null;
                 }
@@ -92,28 +70,6 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
             };
             task.execute();
         }
-    }
-
-    private void storeLoginAndAccounts() {
-        String key = getOrCreateEncryptionKey();
-        if (key == null) {
-            state=REQUESTING_PASSWORD;
-            return; // password dialog will be started from getOrCreateEncryptionKey
-        }
-        System.out.println("Using encryption key '"+key+"'");
-        System.out.println("Storing login: "+bankLogin );
-        for (BankAccount account:accounts){
-            System.out.println("Storing account: "+account);
-        }
-        state=IDLE;
-    }
-
-    private String getOrCreateEncryptionKey() {
-        if (Globals.encryption_key == null){
-            Intent passwordDialog = new Intent(this,PasswordDialog.class);
-            startActivity(passwordDialog);
-        }
-        return Globals.encryption_key;
     }
 
     public void addInstituteList(){
@@ -134,6 +90,67 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
         String password = ((EditText) findViewById(R.id.institute_password)).getText().toString();
         Button addAccountBtn = (Button) findViewById(R.id.add_account_button);
         addAccountBtn.setEnabled(!login.isEmpty() && !password.isEmpty());
+    }
+
+    private SecretKeySpec getOrCreateEncryptionKey() {
+        if (Globals.encryption_key == null){
+            Intent passwordDialog = new Intent(this,PasswordDialog.class);
+            startActivity(passwordDialog);
+        }
+        return Globals.encryption_key;
+    }
+
+    @Override
+    public void notifyHandlerCreated(boolean success) {
+        TextView tv = (TextView) findViewById(R.id.check_data_state);
+        tv.setText(getText(R.string.check_data_info)+""+getText(success?R.string.success:R.string.failed));
+    }
+
+    @Override
+    public void notifyLoggedIn(boolean success) {
+        TextView tv = (TextView) findViewById(R.id.server_connect_state);
+        tv.setText(getText(R.string.connect_info)+""+getText(success?R.string.success:R.string.failed));
+    }
+
+    @Override
+    public void notifyJobDone(boolean success) {
+        if (success) {
+        } else {
+            findViewById(R.id.add_account_button).setEnabled(true);
+        }
+    }
+
+    @Override
+    public void notifyAccount(String accountNumber, String saldoString, String currency) {
+        TextView tv = (TextView) findViewById(R.id.account_state);
+        tv.setText(getText(R.string.account_info)+" "+accountNumber+" ("+saldoString+" "+currency+")");
+    }
+
+    @Override
+    public void notifyFoundAccounts(Vector<BankAccount> accounts) {
+        TextView tv = (TextView) findViewById(R.id.account_state);
+        tv.setText(String.format(getString(R.string.account_summary),accounts.size()));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_account);
+        addInstituteList();
+        setListeners();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        RelativeLayout credentialsForm = (RelativeLayout) findViewById(R.id.institute_credentials_form);
+        credentialsForm.setVisibility(View.INVISIBLE);
+
+        RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
+        checkView.setVisibility(View.INVISIBLE);
+
+        if (state ==REQUESTING_PASSWORD) storeLoginAndAccounts();
     }
 
     public void setListeners(){
@@ -178,35 +195,22 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
         });
     }
 
-    @Override
-    public void notifyHandlerCreated(boolean success) {
-        TextView tv = (TextView) findViewById(R.id.check_data_state);
-        tv.setText(getText(R.string.check_data_info)+""+getText(success?R.string.success:R.string.failed));
-    }
-
-    @Override
-    public void notifyLoggedIn(boolean success) {
-        TextView tv = (TextView) findViewById(R.id.server_connect_state);
-        tv.setText(getText(R.string.connect_info)+""+getText(success?R.string.success:R.string.failed));
-    }
-
-    @Override
-    public void notifyJobDone(boolean success) {
-        if (success) {
-        } else {
-            findViewById(R.id.add_account_button).setEnabled(true);
+    private void storeLoginAndAccounts() {
+        SecretKeySpec key = getOrCreateEncryptionKey();
+        if (key == null) {
+            state=REQUESTING_PASSWORD;
+            return; // password dialog will be started from getOrCreateEncryptionKey
         }
-    }
+        try {
+            System.out.println("Storing login: " + bankLogin);
 
-    @Override
-    public void notifyAccount(String accountNumber, String saldoString, String currency) {
-        TextView tv = (TextView) findViewById(R.id.account_state);
-        tv.setText(getText(R.string.account_info)+" "+accountNumber+" ("+saldoString+" "+currency+")");
-    }
-
-    @Override
-    public void notifyFoundAccounts(Vector<BankAccount> accounts) {
-        TextView tv = (TextView) findViewById(R.id.account_state);
-        tv.setText(String.format(getString(R.string.account_summary),accounts.size()));
+            bankLogin.saveToDb();
+            /*for (BankAccount account : accounts) {
+                System.out.println("Storing account: " + account);
+            }*/
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        state=IDLE;
     }
 }

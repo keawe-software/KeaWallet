@@ -12,12 +12,12 @@
 
 
     <ImageButton
+        android:id="@+id/addAccountButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/addAccountButton"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:src="@drawable/abc_ic_menu_selectall_mtrl_alpha"/>
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ic_create_new_folder_black_24dp" />
 
     <TextView
         android:layout_width="wrap_content"
