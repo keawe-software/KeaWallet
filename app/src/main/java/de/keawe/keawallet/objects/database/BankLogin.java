@@ -304,6 +304,7 @@ public class BankLogin extends HBCICallbackConsole  {
         }
         if (Globals.hbciHandler == null) {
             HBCIUtils.init(new HBCIProperties(), this);
+            HBCIUtils.setParam("client.errors.ignoreDialogEndErrors","yes");
             Globals.hbciHandler = new AndroidHBCIHandler(institute.getHBCIVersion(), new PinTanPass(),Globals.context().getAssets());
             activeInstitute = institute;
         }

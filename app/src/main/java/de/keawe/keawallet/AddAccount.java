@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -135,6 +136,7 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle(getString(R.string.app_name)+" : "+getString(R.string.create_account));
         setContentView(R.layout.activity_add_account);
         addInstituteList();
         setListeners();
@@ -150,6 +152,13 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
 
         RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
         checkView.setVisibility(View.INVISIBLE);
+
+        ((AutoCompleteTextView) findViewById(R.id.institute_selector)).setText("");
+        ((EditText) findViewById(R.id.institute_login)).setText("");
+
+        ((TextView)findViewById(R.id.check_data_state)).setText(R.string.check_data_info);
+        ((TextView)findViewById(R.id.server_connect_state)).setText("");
+        ((TextView)findViewById(R.id.account_state)).setText("");
 
         if (state == REQUESTING_PASSWORD) storeLoginAndAccounts();
     }

@@ -69,13 +69,16 @@ public class FetchTransactions extends AppCompatActivity {
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
                     addItemToList(bankEntry);
                     for (BankAccount account : login.accounts()){
+                        Transaction lastTransaction = Transaction.getLastFor(account);
+                        Long lastDate = lastTransaction == null ? null : lastTransaction.bdate();
+
                         TextView accountEntry = new TextView(FetchTransactions.this);
                         accountEntry.setText(getString(R.string.fetch_account_transactions).replace("#",account.number()));
                         accountEntry.setPadding(30,0,0,0);
                         addItemToList(accountEntry);
                         int count = 0;
                         try {
-                            GVRKUms transactions = account.fetchNewTransactions();
+                            GVRKUms transactions = account.fetchNewTransactionsSince(lastDate);
                             if (!transactions.isOK()) continue;
                             for (GVRKUms.UmsLine hbciTransaction:transactions.getFlatData()){
                                 Transaction transaction = new Transaction(hbciTransaction,account);

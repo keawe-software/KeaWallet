@@ -1,6 +1,7 @@
 package de.keawe.keawallet.objects.database;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import org.kapott.hbci.GV_Result.GVRKUms;
@@ -13,6 +14,8 @@ import java.util.TimeZone;
 import de.keawe.keawallet.objects.Globals;
 
 public class Transaction {
+    private final static String TABLE_NAME = "transactions";
+    private final static String KEY = "id";
     private final static String ACCOUNT   = "bank_account";
     private final static String BDATE     = "bdate";
     private final static String GVCODE    = "gv";
@@ -23,59 +26,56 @@ public class Transaction {
     private final static String VALUE     = "value";
     private final static String VALUTA    = "valuta";
 
-    private final static String TABLE_NAME = "transactions";
-    private final static String KEY = "id";
     public final static String TABLE_CREATION = "CREATE TABLE "+TABLE_NAME+"("+
             KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
             ACCOUNT+" INT NOT NULL, "+
             BDATE+" LONG, "+
-            VALUTA+" LONG, "+
             GVCODE+" INT, "+
-            VALUE+" LONG, "+
-            USAGE+" VARCHAR(255), "+
-            TEXT+" INT, "+
             INSTREF+" VARCHAR(255), "+
-            PRIMANOTA+" INT)";
+            PRIMANOTA+" INT,"+
+            TEXT+" INT, "+
+            USAGE+" VARCHAR(255), "+
+            VALUE+" LONG, "+
+            VALUTA+" LONG)";
 
-
-    public void saveToDb() {
-        SQLiteDatabase db = Globals.writableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(ACCOUNT,  account.id());
-        values.put(BDATE,    bdate);
-        values.put(GVCODE,   gvcode);
-        values.put(INSTREF,  instRef);
-        values.put(PRIMANOTA,primanota);
-        values.put(TEXT,     text);
-        values.put(USAGE,    usage);
-        values.put(VALUE,    value);
-        values.put(VALUTA,   valuta);
-        this.id = db.insert(TABLE_NAME,null,values);
-    }
-
-
+    private long id = 0;
+    private BankAccount account = null;
     private Long bdate = null; // Buchungsdatum
-    private Long valuta = null; // Wertstellung
-
     private Integer gvcode = null;
-    private Long value = null; // Cent
-
-    private String usage = null;
-    private Long text = null;
     private String instRef = null;
     private Integer primanota = null;
-    private BankAccount account;
-    private long id = 0;
+    private Text text = null;
+    private String usage = null;
+    private Long value = null; // Cent
+    private Long valuta = null; // Wertstellung
+
+    public Transaction(Cursor cursor, BankAccount account) {
+        this.account = account;
+        for (int index = 0; index < cursor.getColumnCount(); index++){
+            String col = cursor.getColumnName(index);
+            switch (col){
+                case KEY:       this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
+                case INSTREF:   this.instRef   = cursor.getString(index); break;
+                case PRIMANOTA: this.primanota = cursor.isNull(index) ? null : cursor.getInt(index); break;
+                case VALUTA:    this.valuta    = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case VALUE:     this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case USAGE:     this.usage     = cursor.getString(index); break;
+                case TEXT:      this.text      = cursor.isNull(index) ? null : Text.get(cursor.getInt(index)); break;
+            }
+        }
+    }
 
     public Transaction(GVRKUms.UmsLine hbciTransaction,BankAccount account) {
         this.account   = account;
         this.bdate     = hbciTransaction.bdate    == null ? null : hbciTransaction.bdate.getTime();
-        this.valuta    = hbciTransaction.valuta    == null ? null : hbciTransaction.valuta.getTime();
         this.gvcode    = hbciTransaction.gvcode    == null ? null : Integer.parseInt(hbciTransaction.gvcode);
-        this.value     = hbciTransaction.value     == null ? null : hbciTransaction.value.getLongValue();
-        this.text      = hbciTransaction.text      == null ? null : Text.get(hbciTransaction.text).getId();
         this.instRef   = hbciTransaction.instref   == null ? null : hbciTransaction.instref;
         this.primanota = hbciTransaction.primanota == null ? null : Integer.parseInt(hbciTransaction.primanota);
+        this.text      = hbciTransaction.text      == null ? null : Text.get(hbciTransaction.text);
+        this.value     = hbciTransaction.value     == null ? null : hbciTransaction.value.getLongValue();
+        this.valuta    = hbciTransaction.valuta    == null ? null : hbciTransaction.valuta.getTime();
 
         if (hbciTransaction.usage != null) {
             StringBuffer sb = new StringBuffer();
@@ -92,6 +92,8 @@ public class Transaction {
         if (hbciTransaction.orig_value != null) Globals.w("HBCI Transaction contains orig_value: "+hbciTransaction.orig_value);
     }
 
+
+
     @Override
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
@@ -99,5 +101,32 @@ public class Transaction {
         return "Transaction("+sdf.format(new Date(bdate))+": "+String.format("%10s",value/100f)+"€, "+usage+")";
     }
 
+    public static Transaction getLastFor(BankAccount account) {
+        SQLiteDatabase db = Globals.readableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ?", new String[]{"" + account.id()}, null, null, KEY + " DESC", "1");
+        Transaction result = null;
+        if (cursor.moveToNext()) result = new Transaction(cursor,account);
+        db.close();
+        return result;
+    }
 
+
+    public void saveToDb() {
+        SQLiteDatabase db = Globals.writableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ACCOUNT,  account.id());
+        values.put(BDATE,    bdate);
+        values.put(GVCODE,   gvcode);
+        values.put(INSTREF,  instRef);
+        values.put(PRIMANOTA,primanota);
+        values.put(TEXT,     text == null ? null : text.getId());
+        values.put(USAGE,    usage);
+        values.put(VALUE,    value);
+        values.put(VALUTA,   valuta);
+        this.id = db.insert(TABLE_NAME,null,values);
+    }
+
+    public Long bdate() {
+        return bdate;
+    }
 }

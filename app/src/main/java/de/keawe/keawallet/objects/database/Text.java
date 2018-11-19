@@ -39,25 +39,49 @@ public class Text {
         return text;
     }
 
+    public static Text get(int id) {
+        Text result = Text.load(id);
+        knownTexts.put(result.text,result);
+        return result;
+    }
+
+    private static Text load(int id) {
+        SQLiteDatabase db = Globals.readableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, null, KEY+" = ?", new String[]{""+id}, null, null, null);
+        Text result = null;
+        if (cursor.moveToNext()){
+            result = new Text(cursor.getString(1));
+            result.id = cursor.getLong(0);
+        }
+        db.close();
+        return result;
+    }
+
     private void saveToDb() {
         SQLiteDatabase db = Globals.writableDatabase();
         ContentValues values = new ContentValues();
         values.put(TEXT, text);
         id = db.insert(TABLE_NAME,null,values);
+        db.close();
     }
 
     private static Text load(String s) {
         SQLiteDatabase db = Globals.readableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, "text = ?", new String[]{s}, null, null, null);
-        while (cursor.moveToNext()){
-            Text result = new Text(cursor.getString(1));
+        Text result = null;
+        if (cursor.moveToNext()){
+            result = new Text(cursor.getString(1));
             result.id = cursor.getLong(0);
-            return result;
         }
-        return null;
+        db.close();
+        return result;
     }
 
     public long getId() {
         return id;
+    }
+
+    public String get() {
+        return text;
     }
 }

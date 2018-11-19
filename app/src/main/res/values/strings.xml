@@ -31,4 +31,5 @@
     <string name="fetch_login_transactions">Fetching transactions for #:</string>
     <string name="transaction_count"># transactions</string>
     <string name="fetch_account_transactions">Account #:</string>
+    <string name="create_account">Create account</string>
 </resources>

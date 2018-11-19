@@ -11,6 +11,8 @@ import org.kapott.hbci.manager.HBCIUtils;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -93,11 +95,19 @@ public class BankAccount {
     }
 
     public GVRKUms fetchNewTransactions() throws ParserConfigurationException, TransformerException, SAXException, IOException {
+        return fetchNewTransactionsSince(null);
+    }
+
+    public GVRKUms fetchNewTransactionsSince(Long start) throws ParserConfigurationException, TransformerException, SAXException, IOException {
         Properties props = new Properties();
         props.put("my.number", accountNumber);
         props.put("my.blz", bankLogin.getInstitute().blz);
         props.put("my.bic", bankLogin.getInstitute().bic);
         props.put("my.iban", IBAN());
+        if (start != null) {
+            SimpleDateFormat ISO = new SimpleDateFormat("yyyy-MM-dd");
+            props.put("startdate", ISO.format(new Date(start)));
+        }
         return (GVRKUms) bankLogin.executeJob("KUmsAll", props);
     }
 
