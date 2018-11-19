@@ -30,6 +30,7 @@ public class TransactionList extends AppCompatActivity {
                 gotoAddAccount();
             }
         });
+
     }
 
     private void gotoAddAccount() {

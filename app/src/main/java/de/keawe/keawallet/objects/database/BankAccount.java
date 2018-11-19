@@ -103,4 +103,8 @@ public class BankAccount {
         return iban.toString();
 
     }
+
+    public String number() {
+        return accountNumber;
+    }
 }

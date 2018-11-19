@@ -28,4 +28,7 @@
     <string name="no_accouts">No bank accounts found!</string>
     <string name="enter_password">Enter password to unlock the account database.</string>
     <string name="unlock_database">Unlock the databse</string>
+    <string name="fetch_login_transactions">Fetching transactions for #:</string>
+    <string name="transaction_count"># transactions</string>
+    <string name="fetch_account_transactions">Account #:</string>
 </resources>

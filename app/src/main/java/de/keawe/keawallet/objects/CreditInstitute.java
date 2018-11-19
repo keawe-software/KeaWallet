@@ -104,4 +104,8 @@ public class CreditInstitute {
     public String getHBCIVersion() {
         return version;
     }
+
+    public String name() {
+        return name;
+    }
 }
