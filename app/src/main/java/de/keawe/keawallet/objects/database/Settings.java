@@ -23,16 +23,21 @@ public class Settings {
         ContentValues values = new ContentValues();
         values.put(KEY,name);
         values.put(VAL,value.toString());
-        Globals.writableDatabase().insert(TABLE_NAME,null,values);
+        SQLiteDatabase db = Globals.writableDatabase();
+        db.insert(TABLE_NAME,null,values);
+        db.close();
     }
 
     public static String getString(String name){
         String[] columns = new String[]{ VAL };
         String select = KEY+"=?";
         String[] args = new String[]{ name };
-        Cursor cursor = Globals.readableDatabase().query(TABLE_NAME, columns, select, args, null, null, null);
+        SQLiteDatabase db = Globals.readableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, columns, select, args, null, null, null);
         if (cursor.getCount()<1) return null;
         cursor.moveToFirst();
-        return cursor.getString(0);
+        String result = cursor.getString(0);
+        db.close();
+        return result;
     }
 }

@@ -22,6 +22,7 @@ import javax.xml.transform.TransformerException;
 import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Transaction;
 
 public class FetchTransactions extends AppCompatActivity {
 
@@ -62,43 +63,25 @@ public class FetchTransactions extends AppCompatActivity {
             @Override
             protected Void doInBackground(Void... voids) {
                 setProgressBarVisibility(View.VISIBLE);
+
                 for (BankLogin login : logins){
                     TextView bankEntry = new TextView(FetchTransactions.this);
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
                     addItemToList(bankEntry);
-                    Globals.d("Fetching transactions for: "+login);
                     for (BankAccount account : login.accounts()){
-
                         TextView accountEntry = new TextView(FetchTransactions.this);
                         accountEntry.setText(getString(R.string.fetch_account_transactions).replace("#",account.number()));
                         accountEntry.setPadding(30,0,0,0);
                         addItemToList(accountEntry);
-
                         int count = 0;
-
-                        Globals.d("Fetching transactions for: "+account);
                         try {
                             GVRKUms transactions = account.fetchNewTransactions();
                             if (!transactions.isOK()) continue;
-                            for (GVRKUms.UmsLine transaction:transactions.getFlatData()){
-                                System.out.println(transaction.bdate+" (bdate)");
-                                System.out.println(transaction.saldo.timestamp+" (saldo time)");
-                                System.out.println("  Usage:      "+transaction.usage);
-                                System.out.println("  Text:       "+transaction.text);
-                                System.out.println("  Additional: "+transaction.additional);
-                                System.out.println("  Customer: "+transaction.customerref);
-                                System.out.println("  GVCode: "+transaction.gvcode);
-                                System.out.println("  ID: "+transaction.gvcode);
-                                System.out.println("  IntRef: "+transaction.instref);
-                                System.out.println("  Prmanota: "+transaction.primanota);
-                                System.out.println("  PurposeCode: "+transaction.purposecode);
-                                System.out.println("  Value:        "+transaction.value);
-                                System.out.println("  Valuta:       "+transaction.valuta);
-                                System.out.println("  Orig Value:   "+transaction.orig_value+" (orig value)");
-                                System.out.println("  Saldo.value:  "+transaction.saldo.value+" (saldo value)");
-                                System.out.println("  Charge value: "+transaction.charge_value+" (charge value)");
-                                count++;
-                                updateNumber(accountEntry,account.number(),count);
+                            for (GVRKUms.UmsLine hbciTransaction:transactions.getFlatData()){
+                                Transaction transaction = new Transaction(hbciTransaction,account);
+                                transaction.saveToDb();
+                                Globals.d(transaction);
+                                updateNumber(accountEntry,account.number(),++count);
                             }
                         } catch (ParserConfigurationException e) {
                             e.printStackTrace();
@@ -112,6 +95,7 @@ public class FetchTransactions extends AppCompatActivity {
                         updateNumber(accountEntry,account.number(),count);
                     }
                 }
+
                 setProgressBarVisibility(View.INVISIBLE);
                 state = IDLE;
                 return null;

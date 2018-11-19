@@ -8,7 +8,6 @@ import android.os.Build;
 import android.util.Log;
 
 import org.kapott.hbci.manager.HBCIHandler;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -18,6 +17,8 @@ import javax.crypto.spec.SecretKeySpec;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
 import de.keawe.keawallet.objects.database.Settings;
+import de.keawe.keawallet.objects.database.Transaction;
+import de.keawe.keawallet.objects.database.Text;
 
 public class Globals {
 
@@ -31,8 +32,12 @@ public class Globals {
     private final static String ENCRYPTION_ALGORITHM = "AES";
     public static final int DB_VERSION = 1;
 
-    public static void d(String s) {
-        Log.d(APP_NAME,s);
+    public static void d(Object o) {
+        Log.d(APP_NAME,o.toString());
+    }
+
+    public static void w(Object o) {
+        Log.w(APP_NAME,o.toString());
     }
 
     public static class DBHelper extends SQLiteOpenHelper{
@@ -46,6 +51,8 @@ public class Globals {
             sqLiteDatabase.execSQL(BankLogin.TABLE_CREATION);
             sqLiteDatabase.execSQL(Settings.TABLE_CREATION);
             sqLiteDatabase.execSQL(BankAccount.TABLE_CREATION);
+            sqLiteDatabase.execSQL(Transaction.TABLE_CREATION);
+            sqLiteDatabase.execSQL(Text.TABLE_CREATION);
         }
 
         @Override

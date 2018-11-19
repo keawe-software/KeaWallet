@@ -76,7 +76,9 @@ public class BankLogin extends HBCICallbackConsole  {
     }
 
     public static Vector<BankLogin> loadAll() {
-        Cursor cursor = Globals.readableDatabase().query(TABLE_NAME, null, null, null, null, null, null);
+        SQLiteDatabase db = Globals.readableDatabase();
+        Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
+
         Vector<BankLogin> logins = new Vector<>();
         while (cursor.moveToNext()){
             long id =0;
@@ -111,6 +113,7 @@ public class BankLogin extends HBCICallbackConsole  {
                 e.printStackTrace();
             }
         }
+        db.close();
         return logins;
     }
 
@@ -341,6 +344,7 @@ public class BankLogin extends HBCICallbackConsole  {
         values.put(INSTITUTE,institute.blz);
         SQLiteDatabase db = Globals.writableDatabase();
         this.id = db.insert(TABLE_NAME, null, values);
+        db.close();
     }
 
     public Vector<BankAccount> accounts() {

@@ -46,6 +46,7 @@ public class BankAccount {
     public static Vector<BankAccount> load(BankLogin bankLogin) {
         SQLiteDatabase db = Globals.readableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, LOGIN+" = "+bankLogin.getId(), null, null, null, null);
+
         Vector<BankAccount> accounts = new Vector<>();
         while (cursor.moveToNext()){
             long id = 0;
@@ -68,6 +69,7 @@ public class BankAccount {
             account.id = id;
             accounts.add(account);
         }
+        db.close();
         return accounts;
     }
 
@@ -85,7 +87,9 @@ public class BankAccount {
         values.put(NUMBER,this.accountNumber);
         values.put(CURRENCY,this.currency);
         values.put(LOGIN,bankLogin.getId());
-        Globals.writableDatabase().insert(TABLE_NAME, null, values);
+        SQLiteDatabase db = Globals.writableDatabase();
+        id = db.insert(TABLE_NAME, null, values);
+        db.close();
     }
 
     public GVRKUms fetchNewTransactions() throws ParserConfigurationException, TransformerException, SAXException, IOException {
@@ -106,5 +110,9 @@ public class BankAccount {
 
     public String number() {
         return accountNumber;
+    }
+
+    public long id() {
+        return id;
     }
 }
