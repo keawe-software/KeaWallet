@@ -34,7 +34,7 @@ public class Participant {
         if (k.customerid != null) Globals.w("Konto has customerid set: "+k.customerid);
         this.iban = k.iban == null ? null : k.iban;
         this.name = k.name == null ? (k.name2 == null? null : k.name2) : k.name+(k.name2 == null ? "": k.name2);
-        this.number = k.number == null ? null : k.number;
+        this.number = k.number == null ? null : k.number.isEmpty() ? null : k.number;
 
         String hash = Globals.byteArrayToHexString(Globals.hash(bic+"\n"+iban+"\n"+name+"\n"+number));
 

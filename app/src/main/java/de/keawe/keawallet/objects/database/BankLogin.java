@@ -170,7 +170,6 @@ public class BankLogin extends HBCICallbackConsole  {
                 HBCIJobResult result = executeJob("SaldoReq", props); // Saldo des aktuellen Kontos abfragen
                 if (result.isOK()) {
                     Properties data = result.getResultData();
-                    System.out.println(data);
                     String accountNumber = data.get("content.KTV.number").toString(); // Kontonummer
 
                     String saldoString = data.get("content.booked.CreditDebit").equals("D") ? "-" : ""; // Soll oder Haben?
@@ -179,7 +178,6 @@ public class BankLogin extends HBCICallbackConsole  {
                     listener.notifyAccount(accountNumber,saldoString,currency);
                     BankAccount bankAccount = new BankAccount(this, accountNumber, currency); // neues Konto mit den getesteten Daten anlegen
                     accounts.add(bankAccount); // neues Konto zu den Konten des Logins hinzufügen (aber nicht speichern)
-                    System.out.println(bankAccount);
                 }
             }
         } catch (Exception e) {

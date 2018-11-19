@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
+import java.util.Vector;
 
 import de.keawe.keawallet.objects.Globals;
 
@@ -51,6 +52,7 @@ public class Transaction {
     private String usage = null;
     private Long value = null; // Cent
     private Long valuta = null; // Wertstellung
+    private String hash = null;
 
     public Transaction(Cursor cursor, BankAccount account) {
         this.account = account;
@@ -61,7 +63,7 @@ public class Transaction {
                 case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case INSTREF:   this.instRef   = cursor.getString(index); break;
-                case OTHER:     this.other     = cursor.getLong(index); break;
+                case OTHER:     this.other     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case PRIMANOTA: this.primanota = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case VALUTA:    this.valuta    = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case VALUE:     this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
@@ -97,23 +99,41 @@ public class Transaction {
         if (hbciTransaction.orig_value != null) Globals.w("HBCI Transaction contains orig_value: "+hbciTransaction.orig_value);
     }
 
-
-
-    @Override
-    public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        sdf.setTimeZone(TimeZone.getDefault());
-        return "Transaction("+sdf.format(new Date(bdate))+": "+String.format("%10s",value/100f)+"€, "+usage+")";
+    public Long bdate() {
+        return bdate;
     }
 
-    public static Transaction getLastFor(BankAccount account) {
+    public static Vector<Transaction> getLastFor(BankAccount account) {
         SQLiteDatabase db = Globals.readableDatabase();
-        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ?", new String[]{"" + account.id()}, null, null, KEY + " DESC", "1");
-        Transaction result = null;
-        if (cursor.moveToNext()) result = new Transaction(cursor,account);
+
+        Vector<Transaction> lastTransactions = new Vector<>();
+        Long lastDate = null;
+        Cursor cursor = db.query(TABLE_NAME, new String[]{ BDATE },ACCOUNT + " = ?", new String[]{"" + account.id()},null,null,BDATE + " DESC","1");
+        if (cursor.moveToNext()) lastDate = cursor.getLong(0);
+        if (lastDate != null){
+            cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate = ?", new String[]{"" + account.id(), ""+lastDate}, null, null, null);
+            while (cursor.moveToNext()) lastTransactions.add(new Transaction(cursor,account));
+        }
         db.close();
-        return result;
+        return lastTransactions;
     }
+
+    public boolean in(Vector<Transaction> otherTransactions) {
+        String hash = this.hash();
+        for (Transaction otherT: otherTransactions) {
+            if (hash.equals(otherT.hash())) return true;
+        }
+        return false;
+    }
+
+    public String hash() {
+        if (this.hash == null){
+            Long textId = text == null ? null : text.getId();
+            this.hash = Globals.byteArrayToHexString(Globals.hash(account.id() + "\\" + bdate + "\\" + gvcode + "\\" + instRef + "\\" + other + "\\" + primanota + "\\" + textId + "\\" + usage.replace("\n", "#") + "\\" + value + "\\" + valuta));
+        }
+        return this.hash;
+    }
+
 
 
     public void saveToDb() {
@@ -132,7 +152,10 @@ public class Transaction {
         this.id = db.insert(TABLE_NAME,null,values);
     }
 
-    public Long bdate() {
-        return bdate;
+    @Override
+    public String toString() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        sdf.setTimeZone(TimeZone.getDefault());
+        return "Transaction("+sdf.format(new Date(bdate))+": "+String.format("%10s",value/100f)+"€, "+usage.replace("\n","\\")+")";
     }
 }

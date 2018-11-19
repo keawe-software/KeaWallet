@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -69,8 +70,8 @@ public class FetchTransactions extends AppCompatActivity {
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
                     addItemToList(bankEntry);
                     for (BankAccount account : login.accounts()){
-                        Transaction lastTransaction = Transaction.getLastFor(account);
-                        Long lastDate = lastTransaction == null ? null : lastTransaction.bdate();
+                        Vector<Transaction> lastTransactions = Transaction.getLastFor(account);
+                        Long lastDate = lastTransactions.isEmpty() ? null : lastTransactions.lastElement().bdate();
 
                         TextView accountEntry = new TextView(FetchTransactions.this);
                         accountEntry.setText(getString(R.string.fetch_account_transactions).replace("#",account.number()));
@@ -82,9 +83,10 @@ public class FetchTransactions extends AppCompatActivity {
                             if (!transactions.isOK()) continue;
                             for (GVRKUms.UmsLine hbciTransaction:transactions.getFlatData()){
                                 Transaction transaction = new Transaction(hbciTransaction,account);
-                                transaction.saveToDb();
-                                //Globals.d(transaction);
-                                updateNumber(accountEntry,account.number(),++count);
+                                if (!transaction.in(lastTransactions)) {
+                                    transaction.saveToDb();
+                                    updateNumber(accountEntry,account.number(),++count);
+                                }
                             }
                         } catch (ParserConfigurationException e) {
                             e.printStackTrace();
