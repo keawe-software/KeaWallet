@@ -86,7 +86,7 @@ public class CreditInstitute {
     @Override
     public String toString() {
         if (this.blz == null) return this.name;
-        return '('+this.blz+") "+this.name;
+        return this.blz+" / "+this.name;
     }
 
     public String bic_url() {

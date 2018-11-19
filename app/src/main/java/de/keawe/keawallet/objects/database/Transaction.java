@@ -20,6 +20,7 @@ public class Transaction {
     private final static String BDATE     = "bdate";
     private final static String GVCODE    = "gv";
     private final static String INSTREF   = "instref";
+    private final static String OTHER     = "other";
     private final static String PRIMANOTA = "primanota";
     private final static String TEXT      = "text";
     private final static String USAGE     = "usage";
@@ -32,6 +33,7 @@ public class Transaction {
             BDATE+" LONG, "+
             GVCODE+" INT, "+
             INSTREF+" VARCHAR(255), "+
+            OTHER+" LONG,"+
             PRIMANOTA+" INT,"+
             TEXT+" INT, "+
             USAGE+" VARCHAR(255), "+
@@ -43,6 +45,7 @@ public class Transaction {
     private Long bdate = null; // Buchungsdatum
     private Integer gvcode = null;
     private String instRef = null;
+    private Long other = null;
     private Integer primanota = null;
     private Text text = null;
     private String usage = null;
@@ -58,6 +61,7 @@ public class Transaction {
                 case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case INSTREF:   this.instRef   = cursor.getString(index); break;
+                case OTHER:     this.other     = cursor.getLong(index); break;
                 case PRIMANOTA: this.primanota = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case VALUTA:    this.valuta    = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case VALUE:     this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
@@ -72,6 +76,7 @@ public class Transaction {
         this.bdate     = hbciTransaction.bdate    == null ? null : hbciTransaction.bdate.getTime();
         this.gvcode    = hbciTransaction.gvcode    == null ? null : Integer.parseInt(hbciTransaction.gvcode);
         this.instRef   = hbciTransaction.instref   == null ? null : hbciTransaction.instref;
+        this.other     = hbciTransaction.other     == null ? null : (new Participant(hbciTransaction.other)).getId();
         this.primanota = hbciTransaction.primanota == null ? null : Integer.parseInt(hbciTransaction.primanota);
         this.text      = hbciTransaction.text      == null ? null : Text.get(hbciTransaction.text);
         this.value     = hbciTransaction.value     == null ? null : hbciTransaction.value.getLongValue();
@@ -118,6 +123,7 @@ public class Transaction {
         values.put(BDATE,    bdate);
         values.put(GVCODE,   gvcode);
         values.put(INSTREF,  instRef);
+        values.put(OTHER,    other);
         values.put(PRIMANOTA,primanota);
         values.put(TEXT,     text == null ? null : text.getId());
         values.put(USAGE,    usage);

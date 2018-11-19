@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Participant;
 import de.keawe.keawallet.objects.database.Settings;
 import de.keawe.keawallet.objects.database.Transaction;
 import de.keawe.keawallet.objects.database.Text;
@@ -53,6 +54,7 @@ public class Globals {
             sqLiteDatabase.execSQL(BankAccount.TABLE_CREATION);
             sqLiteDatabase.execSQL(Transaction.TABLE_CREATION);
             sqLiteDatabase.execSQL(Text.TABLE_CREATION);
+            sqLiteDatabase.execSQL(Participant.TABLE_CREATION);
         }
 
         @Override

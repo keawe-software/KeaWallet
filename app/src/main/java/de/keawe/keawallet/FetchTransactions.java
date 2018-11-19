@@ -83,7 +83,7 @@ public class FetchTransactions extends AppCompatActivity {
                             for (GVRKUms.UmsLine hbciTransaction:transactions.getFlatData()){
                                 Transaction transaction = new Transaction(hbciTransaction,account);
                                 transaction.saveToDb();
-                                Globals.d(transaction);
+                                //Globals.d(transaction);
                                 updateNumber(accountEntry,account.number(),++count);
                             }
                         } catch (ParserConfigurationException e) {

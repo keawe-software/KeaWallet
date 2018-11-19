@@ -26,5 +26,7 @@
         android:id="@+id/placeholder"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_alignEnd="@+id/addAccountButton"/>
+        android:layout_alignEnd="@+id/addAccountButton"
+        android:textSize="@dimen/abc_text_size_medium_material"/>
+
 </RelativeLayout>

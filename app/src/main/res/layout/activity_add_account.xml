@@ -12,16 +12,26 @@
 
     <TextView
         android:id="@+id/account_selection_hint"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/account_selection_hint"/>
+        android:text="@string/account_selection_hint"
+        android:textSize="@dimen/abc_text_size_medium_material" />
+
+    <TextView
+        android:id="@+id/account_selection_hint2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/account_selection_hint"
+        android:layout_alignEnd="@+id/account_selection_hint"
+        android:text="@string/account_selection_hint_2" />
+        android:layout_alignParentStart="true" />
 
     <AutoCompleteTextView
         android:id="@+id/institute_selector"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/account_selection_hint"
-        android:layout_alignEnd="@+id/account_selection_hint"
+        android:layout_below="@+id/account_selection_hint2"
+        android:layout_alignEnd="@+id/account_selection_hint2"
         android:layout_alignParentStart="true" />
 
     <RelativeLayout
