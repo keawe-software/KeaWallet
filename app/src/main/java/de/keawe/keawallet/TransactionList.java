@@ -8,12 +8,18 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 
 import org.iban4j.CountryCode;
 import org.iban4j.Iban;
 
+import java.util.Vector;
+
 import de.keawe.keawallet.objects.Globals;
+import de.keawe.keawallet.objects.database.BankAccount;
+import de.keawe.keawallet.objects.database.BankLogin;
 
 public class TransactionList extends AppCompatActivity {
 
@@ -64,5 +70,13 @@ public class TransactionList extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Globals.d("Resuming TransactionList");
+
+
+        Vector<BankAccount> accounts = new Vector<>();
+        Vector<BankLogin> bankLogins = BankLogin.loadAll();
+        for (BankLogin login:bankLogins) accounts.addAll(login.accounts());
+        BankAccount[] accountArray = accounts.toArray(new BankAccount[accounts.size()]);
+        Spinner accountSelector = (Spinner)findViewById(R.id.account_selector);
+        accountSelector.setAdapter(new ArrayAdapter<>(this,R.layout.support_simple_spinner_dropdown_item,accountArray));
     }
 }

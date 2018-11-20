@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -47,13 +46,10 @@ public class FetchTransactions extends AppCompatActivity {
             startActivity(passwordDialog);
             return;
         }
-
         if (state == IDLE){
             state = FETCHING;
             fetchTransactions();
         }
-
-
     }
 
     public void fetchTransactions(){

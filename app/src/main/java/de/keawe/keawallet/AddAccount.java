@@ -12,7 +12,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,37 +38,50 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     private boolean checkRunning = false;
     private Vector<BankAccount> accounts;
     BankLogin bankLogin = null;
-    private final static int REQUESTING_PASSWORD = 1;
+    private final static int ADDING_LOGIN = 1;
     private final static int IDLE = 0;
     private static int state = IDLE;
 
-    public void accountButtonClicked(){
+    public void addLogin(){
+        Globals.d("AddAccount.accountButtonClicked();");
+
+        SecretKeySpec key = getOrCreateEncryptionKey();
+        if (key == null) {
+            state=ADDING_LOGIN;
+            return; // password dialog will be started from getOrCreateEncryptionKey
+        }
+
         String login = ((TextView) findViewById(R.id.institute_login)).getText().toString();
         String secret = ((TextView) findViewById(R.id.institute_password)).getText().toString();
 
-        bankLogin = new BankLogin(selectedInstitute, login, secret);
-        RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
-        checkView.setVisibility(View.VISIBLE);
+        try {
+            bankLogin = new BankLogin(selectedInstitute, login, Globals.byteArrayToHexString(Globals.encrypt(secret)));
 
-        if (!checkRunning) {
-            final AccountSetupListener listener = this;
-            checkRunning = true;
-            AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+            RelativeLayout checkView = (RelativeLayout) findViewById(R.id.institute_credentials_checks);
+            checkView.setVisibility(View.VISIBLE);
 
-                @Override
-                protected Void doInBackground(Void... params) {
-                    accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
-                    checkRunning = false;
-                    return null;
-                }
+            if (!checkRunning) {
+                final AccountSetupListener listener = this;
+                checkRunning = true;
+                AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
 
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    super.onPostExecute(aVoid);
-                    storeLoginAndAccounts();
-                }
-            };
-            task.execute();
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        accounts = bankLogin.findAccounts(listener);// this method performs the actual hbci task
+                        checkRunning = false;
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        storeLoginAndAccounts();
+                    }
+                };
+                task.execute();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -145,8 +157,11 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     @Override
     protected void onResume() {
         super.onResume();
-        Globals.d("Resuming AddAccount. State = "+(state==REQUESTING_PASSWORD?"REQUESTING PASSWORD":(state==IDLE?"IDLE":"UNKNOWN")));
+        Globals.d("Resuming AddAccount. State = "+(state== ADDING_LOGIN ?"REQUESTING PASSWORD":(state==IDLE?"IDLE":"UNKNOWN")));
+        if (state == ADDING_LOGIN) addLogin();
+    }
 
+    private void resetForm(){
         RelativeLayout credentialsForm = (RelativeLayout) findViewById(R.id.institute_credentials_form);
         credentialsForm.setVisibility(View.INVISIBLE);
 
@@ -159,8 +174,6 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
         ((TextView)findViewById(R.id.check_data_state)).setText(R.string.check_data_info);
         ((TextView)findViewById(R.id.server_connect_state)).setText("");
         ((TextView)findViewById(R.id.account_state)).setText("");
-
-        if (state == REQUESTING_PASSWORD) storeLoginAndAccounts();
     }
 
     public void setListeners(){
@@ -200,22 +213,19 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
             @Override
             public void onClick(View v) {
                 addAccountBtn.setEnabled(false);
-                accountButtonClicked();
+                addLogin();
             }
         });
     }
 
     private void storeLoginAndAccounts() {
-        SecretKeySpec key = getOrCreateEncryptionKey();
-        if (key == null) {
-            state=REQUESTING_PASSWORD;
-            return; // password dialog will be started from getOrCreateEncryptionKey
-        }
         try {
             bankLogin.saveToDb();
             for (BankAccount account : accounts) {
                 account.saveToDb();
             }
+            resetForm();
+
             Intent fetchTransactions = new Intent(this,FetchTransactions.class);
             startActivity(fetchTransactions);
         } catch (Exception e){

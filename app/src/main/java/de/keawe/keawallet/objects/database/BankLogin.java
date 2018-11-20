@@ -47,7 +47,7 @@ public class BankLogin extends HBCICallbackConsole  {
     private static final String CIPHER = "AES";
     private Vector<BankAccount> accounts = null;
     private String login;
-    private String pin;
+    private String encryptedPin;
     private Long id = null;
     private CreditInstitute institute = null;
     private static CreditInstitute activeInstitute;
@@ -57,22 +57,22 @@ public class BankLogin extends HBCICallbackConsole  {
      * neuen Bank-Login erzuegen und mit Daten füllen
      * @param institute
      * @param login
-     * @param pin
+     * @param encryptedPin
      */
-    public BankLogin(CreditInstitute institute, String login, String pin) {
+    public BankLogin(CreditInstitute institute, String login, String encryptedPin) {
         if (institute == null) {
             throw new InvalidParameterException(Globals.string(R.string.invalid_credit_institute));
         }
         if (login == null || login.isEmpty()) {
             throw new InvalidParameterException(Globals.string(R.string.user_must_not_be_empty));
         }
-        if (pin == null || pin.isEmpty()) {
+        if (encryptedPin == null || encryptedPin.isEmpty()) {
             throw new InvalidParameterException(Globals.string(R.string.secret_must_not_be_empty));
         }
         this.institute = institute;
         this.accounts = new Vector<BankAccount>();
         this.login = login;
-        this.pin = pin;
+        this.encryptedPin = encryptedPin;
     }
 
     public static Vector<BankLogin> loadAll() {
@@ -82,7 +82,7 @@ public class BankLogin extends HBCICallbackConsole  {
         Vector<BankLogin> logins = new Vector<>();
         while (cursor.moveToNext()){
             long id =0;
-            String blz = null, login = null, passHex = null;
+            String blz = null, login = null, encryptedPin = null;
 
             for (int index = 0; index < cursor.getColumnCount(); index++){
                 String name = cursor.getColumnName(index);
@@ -94,7 +94,7 @@ public class BankLogin extends HBCICallbackConsole  {
                         login = cursor.getString(index);
                         break;
                     case ENCRYPTED_PIN:
-                        passHex = cursor.getString(index);
+                        encryptedPin = cursor.getString(index);
                         break;
                     case INSTITUTE:
                         blz = cursor.getString(index);
@@ -102,14 +102,12 @@ public class BankLogin extends HBCICallbackConsole  {
 
                 }
             }
-            byte[] passBytes = Globals.hexStringToByteArray(passHex);
             try {
-                String pin = Globals.decrypt(passBytes);
                 CreditInstitute institute = CreditInstitute.get(blz);
-                BankLogin bankLogin = new BankLogin(institute,login,pin);
+                BankLogin bankLogin = new BankLogin(institute, login, encryptedPin);
                 bankLogin.id = id;
                 logins.add(bankLogin);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -122,7 +120,7 @@ public class BankLogin extends HBCICallbackConsole  {
      * liefert eine einfache String-Repräsentation der vorliegenden Instanz
      */
     public String toString() {
-        return "BankLogin: id=" + id + ", Institute=" + institute+", login="+login+", pin="+pin.substring(0,2)+"xxxx";
+        return "BankLogin: id=" + id + ", Institute=" + institute+", login="+login+", pin="+pin().substring(0,2)+"xxxx";
     }
 
     /**
@@ -227,7 +225,7 @@ public class BankLogin extends HBCICallbackConsole  {
                 break;
 
             case NEED_PT_PIN:
-                retData.replace(0, retData.length(), pin);
+                retData.replace(0, retData.length(), pin());
                 break;
 
             case NEED_COUNTRY:
@@ -269,15 +267,7 @@ public class BankLogin extends HBCICallbackConsole  {
         }
     }
 
-    /**
-     * liefert Passwort/Pin des vorliegenden BankLogins
-     * @return
-     */
-    public String getPin() {
-        return pin;
-    }
-
-    /**
+     /**
      * liefert das Institut des vorliegnenden BankLogins
      * @return
      */
@@ -327,19 +317,19 @@ public class BankLogin extends HBCICallbackConsole  {
         return job.getJobResult();
     }
 
-    /**
-     * setzt das Login-Kennwort für den vorleigenden BankLogin
-     * @param pin
-     */
-    public void setPin(String pin) {
-        this.pin = pin;
+    private String pin()  {
+        try {
+            return Globals.decrypt(Globals.hexStringToByteArray(encryptedPin));
+        } catch (Exception e){
+            return null;
+        }
     }
 
-    public void saveToDb() throws Exception {
+    public void saveToDb() {
         Globals.d("Saving Bankaccount"+this);
         ContentValues values = new ContentValues();
         values.put(LOGIN,login);
-        values.put(ENCRYPTED_PIN,Globals.byteArrayToHexString(Globals.encrypt(pin)));
+        values.put(ENCRYPTED_PIN,encryptedPin);
         values.put(INSTITUTE,institute.blz);
         SQLiteDatabase db = Globals.writableDatabase();
         this.id = db.insert(TABLE_NAME, null, values);

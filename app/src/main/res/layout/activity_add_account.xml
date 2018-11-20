@@ -40,7 +40,7 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/institute_selector"
         android:layout_alignParentStart="true"
-        android:visibility="visible">
+        android:visibility="invisible">
 
         <EditText
             android:id="@+id/institute_login"
@@ -91,7 +91,7 @@
             android:layout_height="match_parent"
             android:layout_below="@+id/institute_password"
             android:layout_alignParentStart="true"
-            android:visibility="visible">
+            android:visibility="invisible">
 
             <TextView
                 android:id="@+id/check_data_state"

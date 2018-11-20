@@ -47,7 +47,7 @@ public class BankAccount {
 
     public static Vector<BankAccount> load(BankLogin bankLogin) {
         SQLiteDatabase db = Globals.readableDatabase();
-        Cursor cursor = db.query(TABLE_NAME, null, LOGIN+" = "+bankLogin.getId(), null, null, null, null);
+        Cursor cursor = db.query(TABLE_NAME, null, bankLogin == null ? null : LOGIN+" = "+bankLogin.getId(), null, null, null, null);
 
         Vector<BankAccount> accounts = new Vector<>();
         while (cursor.moveToNext()){
@@ -80,7 +80,7 @@ public class BankAccount {
      * gibt eine einfache Textrepräsentation
      */
     public String toString() {
-        return "Konto " + accountNumber + ": "+currency+" / IBAN: "+IBAN();
+        return bankLogin.getInstitute().name()+": Konto " + accountNumber;
     }
 
     public void saveToDb() {
