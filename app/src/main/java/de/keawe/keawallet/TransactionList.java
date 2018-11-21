@@ -3,21 +3,32 @@ package de.keawe.keawallet;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import org.iban4j.Iban;
+
+import java.sql.Struct;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Category;
 import de.keawe.keawallet.objects.database.Transaction;
 
 public class TransactionList extends AppCompatActivity {
@@ -127,6 +138,8 @@ public class TransactionList extends AppCompatActivity {
     }
 
     private void loadTransactioList() {
+        loadCategoryList();
+
         Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
         if (!(item instanceof BankAccount)) return;
         BankAccount account = (BankAccount) item;
@@ -155,5 +168,54 @@ public class TransactionList extends AppCompatActivity {
                 break;
             }
         }
+    }
+
+    private void loadCategoryList() {
+        Vector<Category> categories = Category.loadAll();
+        HashMap<String,Button> buttonList = new HashMap<>();
+        HashMap<String,LinearLayout> listList = new HashMap<>();
+
+        LinearLayout.LayoutParams btnLayout = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnLayout.gravity = Gravity.LEFT;
+
+        LinearLayout.LayoutParams margin = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        margin.setMargins(100,0,0,0);
+
+        LinearLayout list = (LinearLayout) findViewById(R.id.category_list);
+        list.removeAllViews();
+
+        for (Category c:categories){
+            list = (LinearLayout) findViewById(R.id.category_list);
+
+            StringBuilder sb = new StringBuilder();
+            List<String> structure = c.structure();
+            for (String part:structure){
+                sb.append(part+".");
+
+                Button btn = buttonList.get(sb.toString());
+                if (btn == null) {
+                    btn = new Button(this);
+                    btn.setText(part);
+
+                    btn.setLayoutParams(btnLayout);
+                    buttonList.put(sb.toString(),btn);
+                    list.addView(btn);
+                }
+
+                LinearLayout sublist = listList.get(sb.toString());
+                if (sublist == null) {
+                    sublist = new LinearLayout(this);
+
+
+                    sublist.setLayoutParams(margin);
+
+                    list.addView(sublist);
+
+                }
+                list = sublist;
+
+            }
+        }
+        System.out.println("TransactionList.loadCategories not implemented, yet");
     }
 }

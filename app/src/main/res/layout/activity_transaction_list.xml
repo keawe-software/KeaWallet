@@ -19,15 +19,6 @@
         android:id="@+id/transaction_and_category_list"
         android:visibility="visible">
 
-        <ImageButton
-            android:id="@+id/updateButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="60dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/update" />
 
         <Spinner
             android:layout_width="match_parent"
@@ -84,7 +75,7 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/transaction_value_view"
+            android:layout_below="@+id/transaction_usage_view"
             android:layout_alignStart="@+id/account_selector">
 
             <LinearLayout
@@ -125,4 +116,15 @@
 
         android:background="@android:color/transparent"
         android:src="@drawable/arrow_right" />
+
+    <ImageButton
+        android:id="@+id/updateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_above="@id/addAccountButton"
+        android:background="@android:color/transparent"
+        android:src="@drawable/update" />
+
 </RelativeLayout>
