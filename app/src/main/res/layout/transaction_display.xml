@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/transaction_date_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:paddingBottom="5px"
+        android:text="2018-11-20" />
+
+    <TextView
+        android:id="@+id/transaction_participant_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/account_selector"
+        android:layout_toEndOf="@+id/transaction_date_view"
+        android:layout_alignParentEnd="true"
+        android:paddingLeft="15px"
+        android:paddingBottom="5px"
+        android:text="Umsatzbetreff" />
+
+    <TextView
+        android:id="@+id/transaction_value_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/transaction_participant_view"
+        android:layout_alignParentStart="true"
+        android:text="+123.45€" />
+
+    <TextView
+        android:id="@+id/transaction_usage_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/transaction_participant_view"
+        android:layout_toEndOf="@+id/transaction_date_view"
+        android:layout_alignParentEnd="true"
+        android:paddingLeft="15px"
+        android:text="Stephan Richter" />
+</RelativeLayout>

@@ -1,7 +1,9 @@
 package de.keawe.keawallet;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
@@ -12,6 +14,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -194,10 +197,8 @@ public class TransactionList extends AppCompatActivity {
 
                 Button btn = buttonList.get(sb.toString());
                 if (btn == null) {
-                    btn = new Button(this);
-                    btn.setText(part);
+                    btn = createCatButton(btnLayout,part);
 
-                    btn.setLayoutParams(btnLayout);
                     buttonList.put(sb.toString(),btn);
                     list.addView(btn);
                 }
@@ -217,5 +218,15 @@ public class TransactionList extends AppCompatActivity {
             }
         }
         System.out.println("TransactionList.loadCategories not implemented, yet");
+    }
+
+    private Button createCatButton(LinearLayout.LayoutParams btnLayout, String text) {
+        Button btn = new Button(this);
+        btn.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
+        btn.setPadding(30,0,0,0);
+        btn.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_border));
+        btn.setLayoutParams(btnLayout);
+        btn.setText(text);
+        return btn;
     }
 }
