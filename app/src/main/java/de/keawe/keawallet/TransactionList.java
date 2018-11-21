@@ -3,19 +3,12 @@ package de.keawe.keawallet;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.Toast;
-
-import org.iban4j.CountryCode;
-import org.iban4j.Iban;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -74,8 +67,7 @@ public class TransactionList extends AppCompatActivity {
         accountDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                Object item = accountDropdown.getSelectedItem();
-                if (item instanceof BankAccount) changeBankAccount((BankAccount)item);
+                loadTransactioList();
             }
 
             @Override
@@ -122,10 +114,6 @@ public class TransactionList extends AppCompatActivity {
         }
     }
 
-    public void changeBankAccount(BankAccount account){
-        System.out.println(account);
-    }
-
     public void changeMonth(int d){
         month.add(Calendar.MONTH,d);
         Calendar now = Calendar.getInstance();
@@ -134,5 +122,38 @@ public class TransactionList extends AppCompatActivity {
 
         int dummy = month.get(Calendar.MONTH)+1;
         setTitle(getString(R.string.app_name)+" - "+month.get(Calendar.YEAR)+"-"+(dummy<10?"0":"")+dummy);
+
+        loadTransactioList();
+    }
+
+    private void loadTransactioList() {
+        Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
+        if (!(item instanceof BankAccount)) return;
+        BankAccount account = (BankAccount) item;
+        Vector<Transaction> transactions = account.transactions(month);
+
+        TextView dateView = (TextView) findViewById(R.id.transaction_date_view);
+        TextView usageView = (TextView) findViewById(R.id.transaction_usage_view);
+        TextView valueView = (TextView) findViewById(R.id.transaction_value_view);
+        TextView partView = (TextView) findViewById(R.id.transaction_participant_view);
+
+        if (transactions.isEmpty()){
+            dateView.setText("");
+            usageView.setText("");
+            valueView.setText("");
+            partView.setText(R.string.no_transaction_found);
+        }
+
+        for (Transaction t : transactions){
+            if (t.category() == null){
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                dateView.setText(sdf.format(new Date(t.bdate())));
+                usageView.setText(t.niceUsage());
+                valueView.setText(t.value(account.currency()));
+                partView.setText(t.participant().name());
+
+                break;
+            }
+        }
     }
 }

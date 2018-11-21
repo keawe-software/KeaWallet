@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import org.kapott.hbci.GV_Result.GVRKUms;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
@@ -19,6 +20,7 @@ public class Transaction {
     private final static String KEY = "id";
     private final static String ACCOUNT   = "bank_account";
     private final static String BDATE     = "bdate";
+    private final static String CATEGORY  = "category";
     private final static String GVCODE    = "gv";
     private final static String INSTREF   = "instref";
     private final static String OTHER     = "other";
@@ -32,6 +34,7 @@ public class Transaction {
             KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
             ACCOUNT+" INT NOT NULL, "+
             BDATE+" LONG, "+
+            CATEGORY+" INT DEFAULT 0, "+
             GVCODE+" INT, "+
             INSTREF+" VARCHAR(255), "+
             OTHER+" LONG,"+
@@ -44,6 +47,7 @@ public class Transaction {
     private long id = 0;
     private BankAccount account = null;
     private Long bdate = null; // Buchungsdatum
+    private Integer category = null; // referenz auf category tabelle
     private Integer gvcode = null;
     private String instRef = null;
     private Long other = null;
@@ -61,6 +65,7 @@ public class Transaction {
             switch (col){
                 case KEY:       this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case CATEGORY:  this.category  = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case INSTREF:   this.instRef   = cursor.getString(index); break;
                 case OTHER:     this.other     = cursor.isNull(index) ? null : cursor.getLong(index); break;
@@ -76,6 +81,7 @@ public class Transaction {
     public Transaction(GVRKUms.UmsLine hbciTransaction,BankAccount account) {
         this.account   = account;
         this.bdate     = hbciTransaction.bdate    == null ? null : hbciTransaction.bdate.getTime();
+        this.category  = null;
         this.gvcode    = hbciTransaction.gvcode    == null ? null : Integer.parseInt(hbciTransaction.gvcode);
         this.instRef   = hbciTransaction.instref   == null ? null : hbciTransaction.instref;
         this.other     = hbciTransaction.other     == null ? null : (new Participant(hbciTransaction.other)).getId();
@@ -97,6 +103,21 @@ public class Transaction {
         if (hbciTransaction.id != null) Globals.w("HBCI Transaction contains id: "+hbciTransaction.id);
         if (hbciTransaction.additional != null) Globals.w("HBCI Transaction contains additional: "+hbciTransaction.additional);
         if (hbciTransaction.orig_value != null) Globals.w("HBCI Transaction contains orig_value: "+hbciTransaction.orig_value);
+    }
+
+    public static Vector<Transaction> getFor(BankAccount account, Calendar month) {
+        Calendar date = Globals.firstOf(month);
+        long start = date.getTimeInMillis() - 1;
+        date.add(Calendar.DATE,35);
+        date = Globals.firstOf(date);
+        long end = date.getTimeInMillis();
+        SQLiteDatabase db = Globals.readableDatabase();
+
+        Vector<Transaction> transactions = new Vector<>();
+        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate > ? AND bdate < ?", new String[]{"" + account.id(), ""+start, ""+end}, null, null, null);
+        while (cursor.moveToNext()) transactions.add(new Transaction(cursor,account));
+        db.close();
+        return transactions;
     }
 
     public Long bdate() {
@@ -141,6 +162,7 @@ public class Transaction {
         ContentValues values = new ContentValues();
         values.put(ACCOUNT,  account.id());
         values.put(BDATE,    bdate);
+        values.put(CATEGORY, category);
         values.put(GVCODE,   gvcode);
         values.put(INSTREF,  instRef);
         values.put(OTHER,    other);
@@ -157,5 +179,40 @@ public class Transaction {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         sdf.setTimeZone(TimeZone.getDefault());
         return "Transaction("+sdf.format(new Date(bdate))+": "+String.format("%10s",value/100f)+"€, "+usage.replace("\n","\\")+")";
+    }
+
+    public Category category() {
+        return category == null ? null : Category.load(category);
+    }
+
+    public String niceUsage() {
+        String[] parts = usage.split("\n");
+        StringBuffer sb = new StringBuffer();
+        for (String p:parts) {
+            if (p.startsWith("EREF+")) continue;
+            if (p.startsWith("MREF+")) continue;
+            if (p.startsWith("CRED+")) continue;
+            if (p.startsWith("SVWZ+")) continue;
+
+            int i = p.indexOf("EREF:");
+            if (i<0) i = p.indexOf("MREF:");
+            if (i<0) i = p.indexOf("CREAD:");
+            if (i>0) {
+                sb.append(p.substring(0,i));
+                break;
+            }
+            sb.append(p);
+        }
+
+        return sb.toString().trim();
+    }
+
+    public String value(String currency) {
+        return String.format("%.2f",value/100.0)+" "+currency;
+    }
+
+    public Participant participant() {
+        if (other == null) return null;
+        return Participant.load(other);
     }
 }

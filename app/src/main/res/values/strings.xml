@@ -33,4 +33,15 @@
     <string name="fetch_account_transactions">Account #:</string>
     <string name="create_account">Create account</string>
     <string name="account_selection_hint_2">You can select a credit institute by typing eithe a part of its name, or the institute number.</string>
+    <string name="insurance_life_insurance">Insurance.Life Insurance</string>
+    <string name="insurance_health">Insurances.Health Insurance</string>
+    <string name="insurance_life">Insurances.Life Insurance</string>
+    <string name="mobility_car">Mobility.Car</string>
+    <string name="mobility_public">Mobility.Public Transport</string>
+    <string name="fees">Fees</string>
+    <string name="ventures">Ventures</string>
+    <string name="income">Income</string>
+    <string name="leisure">Leisure</string>
+    <string name="conumption">Consumption</string>
+    <string name="no_transaction_found">No transaction found</string>
 </resources>

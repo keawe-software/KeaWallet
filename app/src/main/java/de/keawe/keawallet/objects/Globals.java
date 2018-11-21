@@ -10,12 +10,14 @@ import android.util.Log;
 import org.kapott.hbci.manager.HBCIHandler;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Category;
 import de.keawe.keawallet.objects.database.Participant;
 import de.keawe.keawallet.objects.database.Settings;
 import de.keawe.keawallet.objects.database.Transaction;
@@ -41,6 +43,15 @@ public class Globals {
         Log.w(APP_NAME,o.toString());
     }
 
+    public static Calendar firstOf(Calendar month) {
+        Calendar date = (Calendar) month.clone();
+        date.set(Calendar.DAY_OF_MONTH,1);
+        date.set(Calendar.HOUR,0);
+        date.set(Calendar.MINUTE,0);
+        date.set(Calendar.SECOND,0);
+        return date;
+    }
+
     public static class DBHelper extends SQLiteOpenHelper{
 
         public DBHelper() {
@@ -55,6 +66,8 @@ public class Globals {
             sqLiteDatabase.execSQL(Transaction.TABLE_CREATION);
             sqLiteDatabase.execSQL(Text.TABLE_CREATION);
             sqLiteDatabase.execSQL(Participant.TABLE_CREATION);
+            sqLiteDatabase.execSQL(Category.TABLE_CREATION);
+            sqLiteDatabase.execSQL(Category.preset());
         }
 
         @Override

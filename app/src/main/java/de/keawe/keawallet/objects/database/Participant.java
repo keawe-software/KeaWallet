@@ -56,7 +56,33 @@ public class Participant {
         }
     }
 
+    public Participant(Cursor c) {
+        for (int index = 0; index < c.getColumnCount(); index++){
+            switch (c.getColumnName(index)){
+                case KEY: id = c.getLong(index); break;
+                case BIC: bic = c.getString(index); break;
+                case BLZ: blz = c.getString(index); break;
+                case IBAN: iban = c.getString(index); break;
+                case NAME: name = c.getString(index); break;
+                case NUMBER: number = c.getString(index); break;
+            }
+        }
+    }
+
+    public static Participant load(Long other) {
+        SQLiteDatabase db = Globals.readableDatabase();
+        Participant result = null;
+        Cursor c = db.query(TABLE_NAME,null,KEY+" = ?",new String[]{other+""},null,null,null);
+        if (c.moveToNext()) result = new Participant(c);
+        db.close();
+        return result;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public String name() {
+        return name;
     }
 }

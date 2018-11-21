@@ -7,11 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import org.iban4j.CountryCode;
 import org.iban4j.Iban;
 import org.kapott.hbci.GV_Result.GVRKUms;
-import org.kapott.hbci.manager.HBCIUtils;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Vector;
@@ -124,5 +124,16 @@ public class BankAccount {
 
     public long id() {
         return id;
+    }
+
+    public Vector<Transaction> transactions(Calendar month) {
+        return Transaction.getFor(this,month);
+    }
+
+    public String currency() {
+        switch (currency){
+            case "EUR": return "€";
+        }
+        return currency;
     }
 }
