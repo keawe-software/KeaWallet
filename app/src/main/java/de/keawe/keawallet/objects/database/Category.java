@@ -39,6 +39,7 @@ public class Category {
     private long parent_id = 0;
     private long id = 0;
     private RelativeLayout layout = null;
+    private long sum = 0;
 
     public Category(String def, long parent_id) {
         definition = def;
@@ -146,10 +147,10 @@ public class Category {
             }
         });
 
-
         for (Category child:children()) childList.addView(child.getView(transactionList));
 
         toggleButton.setVisibility(childList.getChildCount()>0?View.VISIBLE:View.GONE);
+        if (parent_id!=0) toggleButton.callOnClick(); // collapse second and lower layers
 
         ImageButton addSubcategoryButton = (ImageButton) layout.findViewById(R.id.add_sub_category_button);
         addSubcategoryButton.setOnClickListener(new View.OnClickListener() {
@@ -216,6 +217,15 @@ public class Category {
 
             ImageButton toggleButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
             toggleButton.setVisibility(View.VISIBLE);
+
+            addValueOf(t);
+
         }
+    }
+
+    private void addValueOf(Transaction t) {
+        sum += t.value();
+        ((Button)layout.findViewById(R.id.assign_category_button)).setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+t.currency()+")");
+        if (parent_id!=0) Category.load(parent_id).addValueOf(t);
     }
 }

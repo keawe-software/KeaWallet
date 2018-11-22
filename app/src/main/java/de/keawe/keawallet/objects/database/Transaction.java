@@ -217,11 +217,12 @@ public class Transaction implements Serializable {
             if (p.startsWith("EREF+")) continue;
             if (p.startsWith("MREF+")) continue;
             if (p.startsWith("CRED+")) continue;
-            if (p.startsWith("SVWZ+")) continue;
+            if (p.startsWith("DEBT+")) continue;
 
             int i = p.indexOf("EREF:");
             if (i<0) i = p.indexOf("MREF:");
             if (i<0) i = p.indexOf("CREAD:");
+            if (i<0) i = p.indexOf("SVWZ+");
             if (i>0) {
                 sb.append(p.substring(0,i));
                 break;
@@ -234,6 +235,10 @@ public class Transaction implements Serializable {
 
     public String value(String currency) {
         return String.format("%.2f",value/100.0)+" "+currency;
+    }
+
+    public long value(){
+        return value;
     }
 
     public Participant participant() {
