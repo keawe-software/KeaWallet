@@ -1,18 +1,11 @@
 package de.keawe.keawallet.objects.database;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v4.content.ContextCompat;
-import android.text.InputType;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -230,5 +223,9 @@ public class Category {
 
     public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
+    }
+
+    public String name() {
+        return definition;
     }
 }

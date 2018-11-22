@@ -51,24 +51,21 @@
 
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/transaction_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/account_selector"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:src="@drawable/info" />
-
     </RelativeLayout>
-
-
 
     <ImageButton
         android:id="@+id/left_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:background="@android:color/transparent"
+        android:background="#cccccccc"
         android:src="@drawable/arrow_left" />
 
     <ImageButton
@@ -77,8 +74,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-
-        android:background="@android:color/transparent"
+        android:background="#cccccccc"
         android:src="@drawable/arrow_right" />
 
     <LinearLayout

@@ -60,4 +60,5 @@
     <string name="category_food">Food</string>
     <string name="add_new_category">Add new category to "%s"</string>
     <string name="category">Category</string>
+    <string name="no_category_assined">No category assigned.</string>
 </resources>

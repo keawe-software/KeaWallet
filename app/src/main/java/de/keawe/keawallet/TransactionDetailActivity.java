@@ -31,6 +31,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.participant_view)).setText(transaction.participant().name());
         ((TextView) findViewById(R.id.short_usage_view)).setText(transaction.niceUsage());
         ((TextView) findViewById(R.id.usage_view)).setText(transaction.usage());
+        ((TextView) findViewById(R.id.category_display)).setText(transaction.category() == null ? getString(R.string.no_category_assined) : transaction.category().name());
+
 
         ImageButton btn = (ImageButton) findViewById(R.id.drop_category_button);
         btn.setOnClickListener(new View.OnClickListener() {

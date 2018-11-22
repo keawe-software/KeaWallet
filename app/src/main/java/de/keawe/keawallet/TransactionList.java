@@ -160,18 +160,19 @@ public class TransactionList extends AppCompatActivity {
         LinearLayout display = (LinearLayout) findViewById(R.id.first_uncategorized_transaction);
         display.removeAllViews();
 
+        View infoButton = findViewById(R.id.transaction_info);
+
         if (!unassignedtransactions.isEmpty() && categoryForFirstTransaction != null) {
             Transaction transaction = unassignedtransactions.pop();
             transaction.setCategory(categoryForFirstTransaction);
             categoryForFirstTransaction.addTransaction(transaction);
         }
         if (unassignedtransactions.isEmpty()) {
-            TextView text = new TextView(this);
-            text.setText(R.string.no_transaction_found);
-            display.addView(text);
+            infoButton.setVisibility(View.GONE);
         } else {
             RelativeLayout unassignedTransactionDisplay = unassignedtransactions.peek().getView(this);
             display.addView(unassignedTransactionDisplay);
+            infoButton.setVisibility(View.VISIBLE);
         }
 
         loadCategoryList(currency, unassignedtransactions.isEmpty());
