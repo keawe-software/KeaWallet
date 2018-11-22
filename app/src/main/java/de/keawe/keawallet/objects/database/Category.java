@@ -1,13 +1,18 @@
 package de.keawe.keawallet.objects.database;
 
+import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.ContextCompat;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -149,15 +154,50 @@ public class Category {
         addSubcategoryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("Adding subcategory not implemented,yet");
+                addCategoryDialog(transactionList);
             }
         });
 
         return layout;
     }
 
+    private void addCategoryDialog(final TransactionList transactionList) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(transactionList);
+        builder.setTitle(String.format(Globals.string(R.string.add_new_category), Category.this.definition));
 
 
+        final EditText input = new EditText(transactionList);
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Category newCat = new Category(input.getText().toString().trim(),Category.this.id);
+                newCat.saveToDb();
+                dialog.dismiss();
+                transactionList.loadTransactioList(null);
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void saveToDb() {
+        ContentValues values = new ContentValues();
+        values.put(CATEGORY,definition);
+        values.put(PARENT,parent_id);
+        SQLiteDatabase db = Globals.writableDatabase();
+        id = db.insert(TABLE_NAME,null,values);
+        db.close();
+        catList.put(id,this);
+    }
 
 
     private Vector<Category> children() {
