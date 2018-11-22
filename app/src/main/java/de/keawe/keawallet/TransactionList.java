@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -26,6 +27,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 import java.util.Vector;
 
 import de.keawe.keawallet.objects.Globals;
@@ -109,8 +111,6 @@ public class TransactionList extends AppCompatActivity {
         super.onResume();
         Globals.d("Resuming TransactionList");
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-
         changeMonth(0);
 
         Vector<BankAccount> accounts = new Vector<>();
@@ -141,57 +141,51 @@ public class TransactionList extends AppCompatActivity {
     }
 
     public void loadTransactioList(Category categoryForFirstTransaction) {
-        loadCategoryList();
-
         Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
         if (!(item instanceof BankAccount)) return;
         BankAccount account = (BankAccount) item;
         Vector<Transaction> transactions = account.transactions(month);
-
-        TextView dateView = (TextView) findViewById(R.id.transaction_date_view);
-        TextView usageView = (TextView) findViewById(R.id.transaction_usage_view);
-        TextView valueView = (TextView) findViewById(R.id.transaction_value_view);
-        TextView partView = (TextView) findViewById(R.id.transaction_participant_view);
-
-        boolean uncategorizedAlreadyVisible = false;
-        boolean noUncategorizedTransaction = true;
-        for (Transaction t : transactions){
-            if (t.category() == null){
-                if (uncategorizedAlreadyVisible) continue;
-                if (categoryForFirstTransaction != null) {
-                    t.setCategory(categoryForFirstTransaction);
-                    categoryForFirstTransaction = null;
-                }
-                if (t.category() == null) {
-                    noUncategorizedTransaction = false;
-                    dateView.setText(t.bdate("yyyy-MM-dd"));
-                    usageView.setText(t.niceUsage());
-                    valueView.setText(t.value(account.currency()));
-                    partView.setText(t.participant()==null?"":t.participant().name());
-                    uncategorizedAlreadyVisible = true;
-                    continue;
-                }
+        String currency = null;
+        Stack<Transaction> unassignedtransactions = new Stack<>();
+        for (Transaction transaction:transactions){
+            Category cat = transaction.category();
+            if (cat == null) {
+                unassignedtransactions.push(transaction);
+                continue;
             }
-            // at this point, only transactions assigned to a category should appear
-            Category cat = t.category();
-            cat.displayTransaction(this,t);
+            if (currency == null) currency=transaction.currency();
+            cat.addTransaction(transaction);
         }
 
-        if (noUncategorizedTransaction){
-            dateView.setText("");
-            usageView.setText("");
-            valueView.setText("");
-            partView.setText(R.string.no_transaction_found);
+        LinearLayout display = (LinearLayout) findViewById(R.id.first_uncategorized_transaction);
+        display.removeAllViews();
+
+        if (!unassignedtransactions.isEmpty() && categoryForFirstTransaction != null) {
+            Transaction transaction = unassignedtransactions.pop();
+            transaction.setCategory(categoryForFirstTransaction);
+            categoryForFirstTransaction.addTransaction(transaction);
+        }
+        if (unassignedtransactions.isEmpty()) {
+            TextView text = new TextView(this);
+            text.setText(R.string.no_transaction_found);
+            display.addView(text);
+        } else {
+            RelativeLayout unassignedTransactionDisplay = unassignedtransactions.peek().getView(this);
+            display.addView(unassignedTransactionDisplay);
         }
 
+        loadCategoryList(currency, unassignedtransactions.isEmpty());
     }
 
-    private void loadCategoryList() {
+    private void loadCategoryList(String currency, boolean show_empty) {
         Vector<Category> root_categories = Category.loadRoots();
 
         LinearLayout list = (LinearLayout) findViewById(R.id.category_list);
         list.removeAllViews();
 
-        for (Category cat : root_categories) list.addView(cat.getView(this));
+        for (Category cat : root_categories) {
+            RelativeLayout view = cat.getView(this,currency,show_empty);
+            if (view != null) list.addView(view);
+        }
     }
 }

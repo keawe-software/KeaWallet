@@ -57,10 +57,18 @@
         android:text="TextView" />
 
     <TextView
-        android:id="@+id/usage_view"
+        android:id="@+id/short_usage_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/participant_view"
+        android:layout_alignParentStart="true"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/usage_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/short_usage_view"
         android:layout_alignParentStart="true"
         android:text="TextView" />
 </RelativeLayout>

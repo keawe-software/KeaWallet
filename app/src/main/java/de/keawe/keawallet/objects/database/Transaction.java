@@ -2,12 +2,10 @@ package de.keawe.keawallet.objects.database;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,11 +18,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.Vector;
-import java.util.concurrent.ThreadLocalRandom;
 
 import de.keawe.keawallet.R;
 import de.keawe.keawallet.TransactionDetailActivity;
-import de.keawe.keawallet.TransactionList;
 import de.keawe.keawallet.objects.Globals;
 
 public class Transaction implements Serializable {
@@ -248,6 +244,7 @@ public class Transaction implements Serializable {
 
     public void setCategory(Category cat) {
         category = cat == null ? 0 : cat.getId();
+        System.out.println("Assigning "+cat+" to "+this);
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
         SQLiteDatabase db = Globals.writableDatabase();
@@ -255,7 +252,7 @@ public class Transaction implements Serializable {
         db.close();
     }
 
-    public View getView(final Activity activity) {
+    public RelativeLayout getView(final Activity activity) {
         RelativeLayout layout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.transaction_display,null);
 
         ((TextView) layout.findViewById(R.id.transaction_date_view)).setText(bdate("yyyy-MM-dd"));
@@ -283,5 +280,9 @@ public class Transaction implements Serializable {
 
     public String currency() {
         return account.currency();
+    }
+
+    public String usage() {
+        return usage;
     }
 }

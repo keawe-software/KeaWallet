@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.content.ContextCompat;
@@ -32,6 +33,8 @@ public class Category {
     private static final String CATEGORY = "category";
     private static final String PARENT = "parent";
     public static final String TABLE_CREATION = "CREATE TABLE " + TABLE_NAME + " (" + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " + PARENT+" LONG, "+CATEGORY + " VARCHAR(255))";
+    public static final boolean HIDE_EMPTY = true;
+    public static final boolean SHOW_EMPTY = false;
     private static HashMap<Long,Category> catList = new HashMap<>();
     private static LinearLayout.LayoutParams btnLayout = null; // will be created on first call of buttonLayout()
     private static LinearLayout.LayoutParams marginLayout = null; // will be created on first call of marginLayout()
@@ -39,7 +42,8 @@ public class Category {
     private long parent_id = 0;
     private long id = 0;
     private RelativeLayout layout = null;
-    private long sum = 0;
+    private Vector<Transaction> transactions = new Vector<>();
+    private int sum = 0;
 
     public Category(String def, long parent_id) {
         definition = def;
@@ -119,47 +123,61 @@ public class Category {
         return result.toString().replace(") (","), (");
     }
 
-    public RelativeLayout getView(final TransactionList transactionList) {
+    public RelativeLayout getView(final TransactionList transactionList, String currency, boolean hideEmpty) {
+        Vector<View> childViews = new Vector<>();
+        sum = 0;
+        for (Category child : children()){
+            RelativeLayout childView = child.getView(transactionList,currency,hideEmpty);
+            if (childView != null) {
+                childViews.add(childView);
+                sum += child.sum;
+            }
+        }
+        for (Transaction transaction : transactions){
+            childViews.add(transaction.getView(transactionList));
+            sum += transaction.value();
+        }
+        if (childViews.isEmpty() && hideEmpty == HIDE_EMPTY) return null;
+
         layout = (RelativeLayout) transactionList.getLayoutInflater().inflate(R.layout.category_list_entry,null);
 
-        Button assignCategoryButtin = (Button) layout.findViewById(R.id.assign_category_button);
-        assignCategoryButtin.setText(definition);
-        assignCategoryButtin.setOnClickListener(new View.OnClickListener() {
+        final LinearLayout childList = (LinearLayout) layout.findViewById(R.id.category_child_list);
+        for (View childView : childViews) childList.addView(childView);
+
+
+        Button assignButton = (Button) layout.findViewById(R.id.assign_category_button);
+        assignButton.setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+currency+")");
+        assignButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 transactionList.loadTransactioList(Category.this);
             }
         });
 
-        final LinearLayout childList = (LinearLayout) layout.findViewById(R.id.category_child_list);
-        final ImageButton toggleButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
-
-        toggleButton.setOnClickListener(new View.OnClickListener() {
+        final ImageButton collapseButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
+        collapseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (childList.getVisibility() == View.VISIBLE){
+                    collapseButton.setImageResource(R.drawable.expand);
                     childList.setVisibility(View.GONE);
-                    toggleButton.setImageResource(R.drawable.expand);
                 } else {
+                    collapseButton.setImageResource(R.drawable.collapse);
                     childList.setVisibility(View.VISIBLE);
-                    toggleButton.setImageResource(R.drawable.collapse);
                 }
             }
         });
 
-        for (Category child:children()) childList.addView(child.getView(transactionList));
+        if (parent_id != 0) collapseButton.callOnClick();
 
-        toggleButton.setVisibility(childList.getChildCount()>0?View.VISIBLE:View.GONE);
-        if (parent_id!=0) toggleButton.callOnClick(); // collapse second and lower layers
-
-        ImageButton addSubcategoryButton = (ImageButton) layout.findViewById(R.id.add_sub_category_button);
-        addSubcategoryButton.setOnClickListener(new View.OnClickListener() {
+        ImageButton addCatButton = (ImageButton) layout.findViewById(R.id.add_sub_category_button);
+        addCatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 addCategoryDialog(transactionList);
             }
         });
-
+        transactions.clear();
         return layout;
     }
 
@@ -210,22 +228,7 @@ public class Category {
         return id;
     }
 
-    public void displayTransaction(Activity activity, Transaction t) {
-        if (layout != null){
-            LinearLayout childList = (LinearLayout) layout.findViewById(R.id.category_child_list);
-            childList.addView(t.getView(activity));
-
-            ImageButton toggleButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
-            toggleButton.setVisibility(View.VISIBLE);
-
-            addValueOf(t);
-
-        }
-    }
-
-    private void addValueOf(Transaction t) {
-        sum += t.value();
-        ((Button)layout.findViewById(R.id.assign_category_button)).setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+t.currency()+")");
-        if (parent_id!=0) Category.load(parent_id).addValueOf(t);
+    public void addTransaction(Transaction transaction) {
+        transactions.add(transaction);
     }
 }
