@@ -1,5 +1,6 @@
 package de.keawe.keawallet.objects.database;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -208,10 +209,10 @@ public class Category {
         return id;
     }
 
-    public void displayTransaction(Context context, Transaction t) {
+    public void displayTransaction(Activity activity, Transaction t) {
         if (layout != null){
             LinearLayout childList = (LinearLayout) layout.findViewById(R.id.category_child_list);
-            childList.addView(t.getView(context));
+            childList.addView(t.getView(activity));
 
             ImageButton toggleButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
             toggleButton.setVisibility(View.VISIBLE);

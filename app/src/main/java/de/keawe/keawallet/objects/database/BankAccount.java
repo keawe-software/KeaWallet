@@ -45,34 +45,44 @@ public class BankAccount {
         this.currency = currency;
     }
 
+    public BankAccount(Cursor cursor){
+        for (int index=0; index<cursor.getColumnCount();index++){
+            String name = cursor.getColumnName(index);
+            switch (name){
+                case KEY:
+                    id = cursor.getLong(index);
+                    break;
+                case NUMBER:
+                    accountNumber = cursor.getString(index);
+                    break;
+                case CURRENCY:
+                    currency = cursor.getString(index);
+                    break;
+            }
+        }
+    }
+
     public static Vector<BankAccount> load(BankLogin bankLogin) {
         SQLiteDatabase db = Globals.readableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, bankLogin == null ? null : LOGIN+" = "+bankLogin.getId(), null, null, null, null);
 
         Vector<BankAccount> accounts = new Vector<>();
         while (cursor.moveToNext()){
-            long id = 0;
-            String number = null, currency = null;
-            for (int index=0; index<cursor.getColumnCount();index++){
-                String name = cursor.getColumnName(index);
-                switch (name){
-                    case KEY:
-                        id = cursor.getInt(index);
-                        break;
-                    case NUMBER:
-                        number = cursor.getString(index);
-                        break;
-                    case CURRENCY:
-                        currency = cursor.getString(index);
-                        break;
-                }
-            }
-            BankAccount account = new BankAccount(bankLogin, number, currency);
-            account.id = id;
+            BankAccount account = new BankAccount(cursor);
+            account.bankLogin = bankLogin;
             accounts.add(account);
         }
         db.close();
         return accounts;
+    }
+
+    public static BankAccount load(long id) {
+        SQLiteDatabase db = Globals.readableDatabase();
+        BankAccount account = null;
+        Cursor cursor = db.query(TABLE_NAME,null,KEY+" = "+id,null,null,null, null);
+        if (cursor.moveToNext()) account = new BankAccount(cursor);
+        db.close();
+        return account;
     }
 
     @Override

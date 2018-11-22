@@ -153,14 +153,8 @@ public class TransactionList extends AppCompatActivity {
         TextView valueView = (TextView) findViewById(R.id.transaction_value_view);
         TextView partView = (TextView) findViewById(R.id.transaction_participant_view);
 
-        if (transactions.isEmpty()){
-            dateView.setText("");
-            usageView.setText("");
-            valueView.setText("");
-            partView.setText(R.string.no_transaction_found);
-        }
-
         boolean uncategorizedAlreadyVisible = false;
+        boolean noUncategorizedTransaction = true;
         for (Transaction t : transactions){
             if (t.category() == null){
                 if (uncategorizedAlreadyVisible) continue;
@@ -169,11 +163,11 @@ public class TransactionList extends AppCompatActivity {
                     categoryForFirstTransaction = null;
                 }
                 if (t.category() == null) {
-
+                    noUncategorizedTransaction = false;
                     dateView.setText(t.bdate("yyyy-MM-dd"));
                     usageView.setText(t.niceUsage());
                     valueView.setText(t.value(account.currency()));
-                    partView.setText(t.participant().name());
+                    partView.setText(t.participant()==null?"":t.participant().name());
                     uncategorizedAlreadyVisible = true;
                     continue;
                 }
@@ -182,6 +176,14 @@ public class TransactionList extends AppCompatActivity {
             Category cat = t.category();
             cat.displayTransaction(this,t);
         }
+
+        if (noUncategorizedTransaction){
+            dateView.setText("");
+            usageView.setText("");
+            valueView.setText("");
+            partView.setText(R.string.no_transaction_found);
+        }
+
     }
 
     private void loadCategoryList() {

@@ -29,7 +29,8 @@
             android:value="@integer/google_play_services_version" />
 
         <activity android:name=".PasswordDialog" />
-        <activity android:name=".FetchTransactions"></activity>
+        <activity android:name=".FetchTransactions" />
+        <activity android:name=".TransactionDetailActivity"></activity>
     </application>
 
 </manifest>

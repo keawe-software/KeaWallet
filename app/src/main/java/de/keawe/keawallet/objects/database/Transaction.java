@@ -1,24 +1,33 @@
 package de.keawe.keawallet.objects.database;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.kapott.hbci.GV_Result.GVRKUms;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.Vector;
+import java.util.concurrent.ThreadLocalRandom;
 
+import de.keawe.keawallet.R;
+import de.keawe.keawallet.TransactionDetailActivity;
+import de.keawe.keawallet.TransactionList;
 import de.keawe.keawallet.objects.Globals;
 
-public class Transaction {
+public class Transaction implements Serializable {
     private final static String TABLE_NAME = "transactions";
     private final static String KEY = "id";
     private final static String ACCOUNT   = "bank_account";
@@ -123,6 +132,19 @@ public class Transaction {
         return transactions;
     }
 
+    public static Transaction load(long id) {
+        SQLiteDatabase db = Globals.readableDatabase();
+        Transaction transaction = null;
+        Cursor cursor = db.query(TABLE_NAME,null,KEY+" = "+id,null,null,null, null);
+        if (cursor.moveToNext()) {
+            long account_id = cursor.getLong(cursor.getColumnIndex(ACCOUNT));
+            BankAccount account = BankAccount.load(account_id);
+            transaction = new Transaction(cursor,account);
+        }
+        db.close();
+        return transaction;
+    }
+
     public Long bdate() {
         return bdate;
     }
@@ -220,7 +242,7 @@ public class Transaction {
     }
 
     public void setCategory(Category cat) {
-        category = cat.getId();
+        category = cat == null ? 0 : cat.getId();
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
         SQLiteDatabase db = Globals.writableDatabase();
@@ -228,14 +250,33 @@ public class Transaction {
         db.close();
     }
 
-    public View getView(Context context) {
-        Button test = new Button(context);
-        test.setText(bdate("MM-dd")+" / "+participant().name());
-        return test;
+    public View getView(final Activity activity) {
+        RelativeLayout layout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.transaction_display,null);
+
+        ((TextView) layout.findViewById(R.id.transaction_date_view)).setText(bdate("yyyy-MM-dd"));
+        ((TextView) layout.findViewById(R.id.transaction_usage_view)).setText(niceUsage());
+        ((TextView) layout.findViewById(R.id.transaction_value_view)).setText(value(account.currency()));
+        ((TextView) layout.findViewById(R.id.transaction_participant_view)).setText(participant()==null?"":participant().name());
+
+        layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("Click");
+                Intent transactionView = new Intent(activity,TransactionDetailActivity.class);
+                transactionView.putExtra(TransactionDetailActivity.TRANSACTION,Transaction.this.id);
+                activity.startActivity(transactionView);
+            }
+        });
+
+        return layout;
     }
 
     public String bdate(String format) {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(new Date(bdate()));
+    }
+
+    public String currency() {
+        return account.currency();
     }
 }
