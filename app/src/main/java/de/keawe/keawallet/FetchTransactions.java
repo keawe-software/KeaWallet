@@ -61,6 +61,8 @@ public class FetchTransactions extends AppCompatActivity {
             protected Void doInBackground(Void... voids) {
                 setProgressBarVisibility(View.VISIBLE);
 
+                Vector<Transaction> categorizedTransactions = Transaction.loadCategorized();
+
                 for (BankLogin login : logins){
                     TextView bankEntry = new TextView(FetchTransactions.this);
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
@@ -82,6 +84,8 @@ public class FetchTransactions extends AppCompatActivity {
                                 if (!transaction.in(lastTransactions)) {
                                     transaction.saveToDb();
                                     updateNumber(accountEntry,account.number(),++count);
+                                    Transaction similarTransaction = transaction.findMostSimilarIn(categorizedTransactions);
+                                    if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) transaction.setCategory(similarTransaction.category());
                                 }
                             }
                         } catch (ParserConfigurationException e) {

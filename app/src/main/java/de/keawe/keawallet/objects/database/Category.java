@@ -109,7 +109,17 @@ public class Category {
                 {10,R.string.category_income,0},
                 {11,R.string.category_ventures,0},
                 {12,R.string.category_fees,0},
-                {13,R.string.category_accomodation,0}
+                {13,R.string.category_accomodation,0},
+                {14,R.string.category_cash,7},
+                {15,R.string.category_sport,7},
+                {16,R.string.category_bike,4},
+                {17,R.string.category_investment_fund,11},
+                {18,R.string.category_account_fee,12},
+                {19,R.string.category_miscellaneous,0},
+                {20,R.string.category_public_braodcasting,12},
+                {21,R.string.category_rent,13},
+                {22,R.string.category_electricity,13},
+                {23,R.string.category_liability,1},
         };
 
         for (int[] entry:values) result.append("("+entry[0]+", '"+Globals.string(entry[1])+"', "+entry[2]+") ");
@@ -228,5 +238,9 @@ public class Category {
 
     public String name() {
         return definition;
+    }
+
+    public String full() {
+        return (parent_id!=0?Category.load(parent_id).full()+"/":"")+name();
     }
 }

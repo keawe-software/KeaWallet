@@ -247,6 +247,7 @@ public class Transaction implements Serializable {
     }
 
     public void setCategory(Category cat) {
+        System.out.println("Assigning "+cat+" to "+this);
         category = cat == null ? 0 : cat.getId();
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
@@ -288,23 +289,28 @@ public class Transaction implements Serializable {
         return usage;
     }
 
-    public Transaction findMostSimilar() {
+    public Transaction findMostSimilarIn(Vector<Transaction> transactionList) {
         System.out.println("Searching similar transaction for "+this);
-        SQLiteDatabase db = Globals.readableDatabase();
-        Transaction result = null;
+
         double similarity = 0;
-        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0",null, null, null, null);
-        while (cursor.moveToNext()){
-            Transaction transaction = new Transaction(cursor, null);
+        Transaction result = null;
+        for(Transaction transaction:transactionList) {
             double sim = this.compare(transaction);
-            if (sim > similarity) {
+            if (sim >= similarity) {
                 similarity = sim;
                 result = transaction;
             }
-        }
+        }return result;
+    }
+
+    public static Vector<Transaction> loadCategorized(){
+        Vector<Transaction> transactions = new Vector<>();
+        SQLiteDatabase db = Globals.readableDatabase();
+        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0",null, null, null, null);
+        while (cursor.moveToNext()) transactions.add(new Transaction(cursor, null));
         cursor.close();
         db.close();
-        return result;
+        return transactions;
     }
 
     public double compare(Transaction transaction) {

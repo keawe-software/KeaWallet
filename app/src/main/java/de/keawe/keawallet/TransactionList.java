@@ -1,32 +1,18 @@
 package de.keawe.keawallet;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.iban4j.Iban;
-
-import java.sql.Struct;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -79,6 +65,15 @@ public class TransactionList extends AppCompatActivity {
             }
         });
 
+        ImageButton helpBtn = (ImageButton)findViewById(R.id.transaction_info);
+        helpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                View overlay = findViewById(R.id.help_overlay);
+                overlay.setVisibility((overlay.getVisibility()==View.VISIBLE)?View.GONE:View.VISIBLE);
+            }
+        });
+
         final Spinner accountDropdown = (Spinner) findViewById(R.id.account_selector);
         accountDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -115,6 +110,7 @@ public class TransactionList extends AppCompatActivity {
 
         Vector<BankAccount> accounts = new Vector<>();
         Vector<BankLogin> bankLogins = BankLogin.loadAll();
+        findViewById(R.id.welcome_overlay).setVisibility(bankLogins.isEmpty()?View.VISIBLE:View.GONE);
         for (BankLogin login:bankLogins) accounts.addAll(login.accounts());
         if (accounts.isEmpty()) {
             findViewById(R.id.transaction_and_category_list).setVisibility(View.INVISIBLE);
@@ -172,13 +168,6 @@ public class TransactionList extends AppCompatActivity {
         } else {
             Transaction unassignedtransaction = unassignedtransactions.peek();
             RelativeLayout unassignedTransactionDisplay = unassignedtransaction.getView(this);
-            Transaction similar = unassignedtransaction.findMostSimilar();
-            if (similar!= null) {
-                double similarity = unassignedtransaction.compare(similar);
-                System.out.println("Most similar: " + similar);
-                System.out.println("Similarity: " + similarity+(similarity>0.00001?" (This is good!)":""));
-                System.out.println("Proposed category: "+similar.category());
-            }
             display.addView(unassignedTransactionDisplay);
             infoButton.setVisibility(View.VISIBLE);
         }
@@ -192,9 +181,18 @@ public class TransactionList extends AppCompatActivity {
         LinearLayout list = (LinearLayout) findViewById(R.id.category_list);
         list.removeAllViews();
 
+        boolean noContent = true;
         for (Category cat : root_categories) {
             RelativeLayout view = cat.getView(this,currency,show_empty);
-            if (view != null) list.addView(view);
+            if (view != null) {
+                list.addView(view);
+                noContent = false;
+            }
+        }
+        if (noContent) {
+            TextView text = new TextView(this);
+            text.setText(R.string.no_transaction_found);
+            list.addView(text);
         }
     }
 }

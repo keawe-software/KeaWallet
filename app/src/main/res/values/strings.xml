@@ -32,7 +32,7 @@
     <string name="transaction_count"># transactions</string>
     <string name="fetch_account_transactions">Account #:</string>
     <string name="create_account">Create account</string>
-    <string name="account_selection_hint_2">You can select a credit institute by typing eithe a part of its name, or the institute number.</string>
+    <string name="account_selection_hint_2">You can select a credit institute by typing either a part of its name, or the institute number.</string>
     <string name="insurance_life_insurance">Insurance.Life Insurance</string>
     <string name="insurance_health">Insurances.Health Insurance</string>
     <string name="insurance_life">Insurances.Life Insurance</string>
@@ -61,4 +61,21 @@
     <string name="add_new_category">Add new category to "%s"</string>
     <string name="category">Category</string>
     <string name="no_category_assined">No category assigned.</string>
+    <string name="refresh_explanation">Click here to update your list of transactions, after you added your first account.</string>
+    <string name="add_account_explanation">Click here to add Bank accounts to this App.</string>
+    <string name="welcome_text">Welcome to KeaWallet!</string>
+    <string name="app_explanation">This app helps you to get an overview on the transactions of you Bank accounts. It allows you to categorize your transactions and gives you montly summaries for your expenses. At the beginning, you will have to assign categories manually. After some learning, the app will handle that for you.</string>
+    <string name="selector_explanation">You can select one of your accounts from this selector. If there are uncategorized transactions, they are shown below the selector. Click on the transaction to view details.</string>
+    <string name="category_explanation">Here is a list of categroies for your transactions. To add the transaction above to a category, just click it.</string>
+    <string name="collapse_explanation">Usings these Buttons, you can collapse/expand the transaction categories or create new subcategories.</string>
+    <string name="category_cash">Cash</string>
+    <string name="category_sport">Sport</string>
+    <string name="category_bike">Bicycle</string>
+    <string name="category_investment_fund">Investment fund</string>
+    <string name="category_account_fee">addcount fee</string>
+    <string name="category_miscellaneous">Miscellaneous</string>
+    <string name="category_public_braodcasting">Public broadcasting</string>
+    <string name="category_rent">Rent</string>
+    <string name="category_electricity">Electricity</string>
+    <string name="category_liability">Liability</string>
 </resources>
