@@ -111,6 +111,7 @@ public class BankLogin extends HBCICallbackConsole  {
                 e.printStackTrace();
             }
         }
+        cursor.close();
         db.close();
         return logins;
     }

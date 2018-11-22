@@ -53,6 +53,7 @@ public class Text {
             result = new Text(cursor.getString(1));
             result.id = cursor.getLong(0);
         }
+        cursor.close();
         db.close();
         return result;
     }
@@ -73,6 +74,7 @@ public class Text {
             result = new Text(cursor.getString(1));
             result.id = cursor.getLong(0);
         }
+        cursor.close();
         db.close();
         return result;
     }

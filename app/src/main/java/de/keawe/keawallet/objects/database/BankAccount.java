@@ -72,6 +72,7 @@ public class BankAccount {
             account.bankLogin = bankLogin;
             accounts.add(account);
         }
+        cursor.close();
         db.close();
         return accounts;
     }
@@ -81,6 +82,7 @@ public class BankAccount {
         BankAccount account = null;
         Cursor cursor = db.query(TABLE_NAME,null,KEY+" = "+id,null,null,null, null);
         if (cursor.moveToNext()) account = new BankAccount(cursor);
+        cursor.close();
         db.close();
         return account;
     }

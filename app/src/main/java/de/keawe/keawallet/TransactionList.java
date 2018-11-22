@@ -170,7 +170,15 @@ public class TransactionList extends AppCompatActivity {
         if (unassignedtransactions.isEmpty()) {
             infoButton.setVisibility(View.GONE);
         } else {
-            RelativeLayout unassignedTransactionDisplay = unassignedtransactions.peek().getView(this);
+            Transaction unassignedtransaction = unassignedtransactions.peek();
+            RelativeLayout unassignedTransactionDisplay = unassignedtransaction.getView(this);
+            Transaction similar = unassignedtransaction.findMostSimilar();
+            if (similar!= null) {
+                double similarity = unassignedtransaction.compare(similar);
+                System.out.println("Most similar: " + similar);
+                System.out.println("Similarity: " + similarity+(similarity>0.00001?" (This is good!)":""));
+                System.out.println("Proposed category: "+similar.category());
+            }
             display.addView(unassignedTransactionDisplay);
             infoButton.setVisibility(View.VISIBLE);
         }

@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.Vector;
 
+import de.keawe.keawallet.Levenshtein;
 import de.keawe.keawallet.R;
 import de.keawe.keawallet.TransactionDetailActivity;
 import de.keawe.keawallet.objects.Globals;
@@ -124,6 +125,7 @@ public class Transaction implements Serializable {
         Vector<Transaction> transactions = new Vector<>();
         Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate > ? AND bdate < ?", new String[]{"" + account.id(), ""+start, ""+end}, null, null, null);
         while (cursor.moveToNext()) transactions.add(new Transaction(cursor,account));
+        cursor.close();
         db.close();
         return transactions;
     }
@@ -137,6 +139,7 @@ public class Transaction implements Serializable {
             BankAccount account = BankAccount.load(account_id);
             transaction = new Transaction(cursor,account);
         }
+        cursor.close();
         db.close();
         return transaction;
     }
@@ -156,6 +159,7 @@ public class Transaction implements Serializable {
             cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate = ?", new String[]{"" + account.id(), ""+lastDate}, null, null, null);
             while (cursor.moveToNext()) lastTransactions.add(new Transaction(cursor,account));
         }
+        cursor.close();
         db.close();
         return lastTransactions;
     }
@@ -244,7 +248,6 @@ public class Transaction implements Serializable {
 
     public void setCategory(Category cat) {
         category = cat == null ? 0 : cat.getId();
-        System.out.println("Assigning "+cat+" to "+this);
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
         SQLiteDatabase db = Globals.writableDatabase();
@@ -263,7 +266,6 @@ public class Transaction implements Serializable {
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("Click");
                 Intent transactionView = new Intent(activity,TransactionDetailActivity.class);
                 transactionView.putExtra(TransactionDetailActivity.TRANSACTION,Transaction.this.id);
                 activity.startActivity(transactionView);
@@ -284,5 +286,47 @@ public class Transaction implements Serializable {
 
     public String usage() {
         return usage;
+    }
+
+    public Transaction findMostSimilar() {
+        System.out.println("Searching similar transaction for "+this);
+        SQLiteDatabase db = Globals.readableDatabase();
+        Transaction result = null;
+        double similarity = 0;
+        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0",null, null, null, null);
+        while (cursor.moveToNext()){
+            Transaction transaction = new Transaction(cursor, null);
+            double sim = this.compare(transaction);
+            if (sim > similarity) {
+                similarity = sim;
+                result = transaction;
+            }
+        }
+        cursor.close();
+        db.close();
+        return result;
+    }
+
+    public double compare(Transaction transaction) {
+        return this.compareValue(transaction) * this.compareUsage(transaction) * this.compareParticipant(transaction);
+    }
+
+    private double compareParticipant(Transaction transaction) {
+        if (this.other == null){
+            if (transaction.other == null) return 0.8; // both transactions have no participant
+            return 0.2; // one has no participant, the other has
+        }
+        if (transaction.other == null) return 0.2;  // one has no participant, the other has
+        return participant().compare(transaction.participant());
+    }
+
+    private double compareUsage(Transaction transaction) {
+        int x=Levenshtein.distance(this.usage,transaction.usage);
+        return 1d/(1+x);
+    }
+
+    private double compareValue(Transaction transaction) {
+        double x = this.value - transaction.value;
+        return 1 - (x/(x+1));
     }
 }

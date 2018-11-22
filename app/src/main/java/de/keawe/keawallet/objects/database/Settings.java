@@ -37,6 +37,7 @@ public class Settings {
         if (cursor.getCount()<1) return null;
         cursor.moveToFirst();
         String result = cursor.getString(0);
+        cursor.close();
         db.close();
         return result;
     }

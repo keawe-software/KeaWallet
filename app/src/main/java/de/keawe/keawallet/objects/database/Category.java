@@ -56,6 +56,7 @@ public class Category {
             cat.id = id;
             catList.put(id,cat);
         }
+        cursor.close();
         db.close();
         return cat;
     }
@@ -76,13 +77,13 @@ public class Category {
             if (cat == null){
                 String definition = cursor.getString(cursor.getColumnIndex(CATEGORY));
                 parent = cursor.getLong(cursor.getColumnIndex(PARENT));
-                System.out.println("id: "+id+", parent: "+parent+", def: "+definition);
                 cat = new Category(definition,parent);
                 cat.id = id;
                 catList.put(id,cat);
             }
             cats.add(cat);
         }
+        cursor.close();
         db.close();
         return cats;
     }

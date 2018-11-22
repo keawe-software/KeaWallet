@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import org.kapott.hbci.structures.Konto;
 
+import de.keawe.keawallet.Levenshtein;
 import de.keawe.keawallet.objects.Globals;
 
 public class Participant {
@@ -41,6 +42,7 @@ public class Participant {
         SQLiteDatabase db = Globals.readableDatabase();
         Cursor cursor = db.query(TABLE_NAME,new String[]{ KEY },HASH+" = ?",new String[]{ hash },null,null,null);
         id = cursor.moveToNext() ? cursor.getLong(0) : null;
+        cursor.close();
         db.close();
 
         if (id == null){
@@ -74,6 +76,7 @@ public class Participant {
         Participant result = null;
         Cursor c = db.query(TABLE_NAME,null,KEY+" = ?",new String[]{other+""},null,null,null);
         if (c.moveToNext()) result = new Participant(c);
+        c.close();
         db.close();
         return result;
     }
@@ -84,5 +87,27 @@ public class Participant {
 
     public String name() {
         return name;
+    }
+
+    public double compare(Participant participant) {
+        return compareName(participant) * compareNumber(participant);
+    }
+
+    private double compareNumber(Participant other) {
+        if (number==null){
+            if (other.number == null) return 0.8;
+            return 0.2; // only one name is null
+        }
+        if (other.number == null) return 0.2; // only one name is null
+        return 1d/(1+Levenshtein.distance(number,other.number));
+    }
+
+    private double compareName(Participant other) {
+        if (name==null){
+            if (other.name == null) return 0.8;
+            return 0.2; // only one name is null
+        }
+        if (other.name == null) return 0.2; // only one name is null
+        return 1d/(1+Levenshtein.distance(name,other.name));
     }
 }
