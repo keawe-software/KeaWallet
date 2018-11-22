@@ -44,4 +44,18 @@
     <string name="leisure">Leisure</string>
     <string name="conumption">Consumption</string>
     <string name="no_transaction_found">No transaction found</string>
+    <string name="category_insurance">Insurance</string>
+    <string name="insurance">Insurance</string>
+    <string name="category_life_insurance">Life Insurance</string>
+    <string name="category_health_insurance">Health Insurance</string>
+    <string name="category_mobility">Mobility</string>
+    <string name="category_mobility_car">Car</string>
+    <string name="category_mobility_public">Public Transportation</string>
+    <string name="category_consumption">Consumption</string>
+    <string name="category_leisure">Leisure</string>
+    <string name="category_income">Income</string>
+    <string name="category_ventures">Ventures</string>
+    <string name="category_fees">Fees</string>
+    <string name="category_accomodation">Accommodation</string>
+    <string name="category_food">Food</string>
 </resources>

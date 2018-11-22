@@ -1,8 +1,11 @@
 package de.keawe.keawallet.objects.database;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.view.View;
+import android.widget.Button;
 
 import org.kapott.hbci.GV_Result.GVRKUms;
 
@@ -47,7 +50,7 @@ public class Transaction {
     private long id = 0;
     private BankAccount account = null;
     private Long bdate = null; // Buchungsdatum
-    private Integer category = null; // referenz auf category tabelle
+    private Long category = null; // referenz auf category tabelle
     private Integer gvcode = null;
     private String instRef = null;
     private Long other = null;
@@ -65,7 +68,7 @@ public class Transaction {
             switch (col){
                 case KEY:       this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case CATEGORY:  this.category  = cursor.isNull(index) ? null : cursor.getInt(index); break;
+                case CATEGORY:  this.category  = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case INSTREF:   this.instRef   = cursor.getString(index); break;
                 case OTHER:     this.other     = cursor.isNull(index) ? null : cursor.getLong(index); break;
@@ -214,5 +217,25 @@ public class Transaction {
     public Participant participant() {
         if (other == null) return null;
         return Participant.load(other);
+    }
+
+    public void setCategory(Category cat) {
+        category = cat.getId();
+        ContentValues values = new ContentValues();
+        values.put(CATEGORY,category);
+        SQLiteDatabase db = Globals.writableDatabase();
+        db.update(TABLE_NAME,values,KEY+" = "+id,null);
+        db.close();
+    }
+
+    public View getView(Context context) {
+        Button test = new Button(context);
+        test.setText(bdate("MM-dd")+" / "+participant().name());
+        return test;
+    }
+
+    public String bdate(String format) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(new Date(bdate()));
     }
 }

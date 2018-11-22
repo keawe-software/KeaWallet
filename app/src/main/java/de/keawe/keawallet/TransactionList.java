@@ -81,7 +81,7 @@ public class TransactionList extends AppCompatActivity {
         accountDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                loadTransactioList();
+                loadTransactioList(null);
             }
 
             @Override
@@ -137,10 +137,10 @@ public class TransactionList extends AppCompatActivity {
         int dummy = month.get(Calendar.MONTH)+1;
         setTitle(getString(R.string.app_name)+" - "+month.get(Calendar.YEAR)+"-"+(dummy<10?"0":"")+dummy);
 
-        loadTransactioList();
+        loadTransactioList(null);
     }
 
-    private void loadTransactioList() {
+    public void loadTransactioList(Category categoryForFirstTransaction) {
         loadCategoryList();
 
         Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
@@ -160,73 +160,36 @@ public class TransactionList extends AppCompatActivity {
             partView.setText(R.string.no_transaction_found);
         }
 
+        boolean uncategorizedAlreadyVisible = false;
         for (Transaction t : transactions){
             if (t.category() == null){
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                dateView.setText(sdf.format(new Date(t.bdate())));
-                usageView.setText(t.niceUsage());
-                valueView.setText(t.value(account.currency()));
-                partView.setText(t.participant().name());
+                if (uncategorizedAlreadyVisible) continue;
+                if (categoryForFirstTransaction != null) {
+                    t.setCategory(categoryForFirstTransaction);
+                    categoryForFirstTransaction = null;
+                }
+                if (t.category() == null) {
 
-                break;
+                    dateView.setText(t.bdate("yyyy-MM-dd"));
+                    usageView.setText(t.niceUsage());
+                    valueView.setText(t.value(account.currency()));
+                    partView.setText(t.participant().name());
+                    uncategorizedAlreadyVisible = true;
+                    continue;
+                }
             }
+            // at this point, only transactions assigned to a category should appear
+            Category cat = t.category();
+            cat.displayTransaction(this,t);
         }
     }
 
     private void loadCategoryList() {
-        Vector<Category> categories = Category.loadAll();
-        HashMap<String,Button> buttonList = new HashMap<>();
-        HashMap<String,LinearLayout> listList = new HashMap<>();
-
-        LinearLayout.LayoutParams btnLayout = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        btnLayout.gravity = Gravity.LEFT;
-
-        LinearLayout.LayoutParams margin = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        margin.setMargins(100,0,0,0);
+        Vector<Category> root_categories = Category.loadRoots();
 
         LinearLayout list = (LinearLayout) findViewById(R.id.category_list);
         list.removeAllViews();
 
-        for (Category c:categories){
-            list = (LinearLayout) findViewById(R.id.category_list);
-
-            StringBuilder sb = new StringBuilder();
-            List<String> structure = c.structure();
-            for (String part:structure){
-                sb.append(part+".");
-
-                Button btn = buttonList.get(sb.toString());
-                if (btn == null) {
-                    btn = createCatButton(btnLayout,part);
-
-                    buttonList.put(sb.toString(),btn);
-                    list.addView(btn);
-                }
-
-                LinearLayout sublist = listList.get(sb.toString());
-                if (sublist == null) {
-                    sublist = new LinearLayout(this);
-
-
-                    sublist.setLayoutParams(margin);
-
-                    list.addView(sublist);
-
-                }
-                list = sublist;
-
-            }
-        }
-        System.out.println("TransactionList.loadCategories not implemented, yet");
-    }
-
-    private Button createCatButton(LinearLayout.LayoutParams btnLayout, String text) {
-        Button btn = new Button(this);
-        btn.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
-        btn.setPadding(30,0,0,0);
-        btn.setBackground(ContextCompat.getDrawable(this,R.drawable.btn_border));
-        btn.setLayoutParams(btnLayout);
-        btn.setText(text);
-        return btn;
+        for (Category cat : root_categories) list.addView(cat.getView(this));
     }
 }

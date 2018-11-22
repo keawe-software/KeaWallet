@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/category_list_entry">
+
+    <ImageButton
+        android:id="@+id/add_sub_category_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="@android:color/transparent"
+        android:src="@drawable/add_category" />
+
+
+
+    <ImageButton
+        android:id="@+id/toggle_category_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/add_sub_category_button"
+        android:background="@android:color/transparent"
+        android:src="@drawable/collapse" />
+
+    <Button
+        android:id="@+id/assign_category_button"
+        android:layout_width="287dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/toggle_category_button"
+        android:background="@drawable/btn_border"
+        android:paddingLeft="10dp"
+        android:gravity="left|center_vertical"
+        android:text="Button" />
+
+    <LinearLayout
+        android:id="@+id/category_child_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/add_sub_category_button"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="20dp"
+        android:orientation="vertical"></LinearLayout>
+</RelativeLayout>
