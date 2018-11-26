@@ -111,7 +111,7 @@ public class Category {
                 {12,R.string.category_fees,0},
                 {13,R.string.category_accomodation,0},
                 {14,R.string.category_cash,7},
-                {15,R.string.category_sport,7},
+                {15,R.string.category_sport,9},
                 {16,R.string.category_bike,4},
                 {17,R.string.category_investment_fund,11},
                 {18,R.string.category_account_fee,12},

@@ -290,8 +290,6 @@ public class Transaction implements Serializable {
     }
 
     public Transaction findMostSimilarIn(Vector<Transaction> transactionList) {
-        System.out.println("Searching similar transaction for "+this);
-
         double similarity = 0;
         Transaction result = null;
         for(Transaction transaction:transactionList) {
@@ -303,10 +301,10 @@ public class Transaction implements Serializable {
         }return result;
     }
 
-    public static Vector<Transaction> loadCategorized(){
+    public static Vector<Transaction> loadCategorized(long account_id){
         Vector<Transaction> transactions = new Vector<>();
         SQLiteDatabase db = Globals.readableDatabase();
-        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0",null, null, null, null);
+        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0 AND "+ACCOUNT+" = "+account_id,null, null, null, null);
         while (cursor.moveToNext()) transactions.add(new Transaction(cursor, null));
         cursor.close();
         db.close();

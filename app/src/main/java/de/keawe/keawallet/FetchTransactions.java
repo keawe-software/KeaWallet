@@ -61,13 +61,13 @@ public class FetchTransactions extends AppCompatActivity {
             protected Void doInBackground(Void... voids) {
                 setProgressBarVisibility(View.VISIBLE);
 
-                Vector<Transaction> categorizedTransactions = Transaction.loadCategorized();
-
                 for (BankLogin login : logins){
                     TextView bankEntry = new TextView(FetchTransactions.this);
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
                     addItemToList(bankEntry);
                     for (BankAccount account : login.accounts()){
+                        Vector<Transaction> categorizedTransactions = Transaction.loadCategorized(account.id());
+
                         Vector<Transaction> lastTransactions = Transaction.getLastFor(account);
                         Long lastDate = lastTransactions.isEmpty() ? null : lastTransactions.lastElement().bdate();
 
