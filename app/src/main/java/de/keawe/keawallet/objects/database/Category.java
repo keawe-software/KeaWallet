@@ -172,8 +172,6 @@ public class Category {
             }
         });
 
-        if (parent_id != 0) collapseButton.callOnClick();
-
         ImageButton addCatButton = (ImageButton) layout.findViewById(R.id.add_sub_category_button);
         addCatButton.setOnClickListener(new View.OnClickListener() {
             @Override
