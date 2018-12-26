@@ -153,6 +153,9 @@ public class TransactionList extends AppCompatActivity {
             cat.addTransaction(transaction);
         }
 
+        TextView balance = (TextView) findViewById(R.id.current_balance);
+        balance.setText(getString(R.string.current_balance).replace("?",transactions.lastElement().getSaldo()));
+
         LinearLayout display = (LinearLayout) findViewById(R.id.first_uncategorized_transaction);
         display.removeAllViews();
 
@@ -175,7 +178,7 @@ public class TransactionList extends AppCompatActivity {
         loadCategoryList(currency, unassignedtransactions.isEmpty());
     }
 
-    private void loadCategoryList(String currency, boolean show_empty) {
+    private void loadCategoryList(String currency, boolean hideEmpty) {
         Vector<Category> root_categories = Category.loadRoots();
 
         LinearLayout list = (LinearLayout) findViewById(R.id.category_list);
@@ -183,7 +186,7 @@ public class TransactionList extends AppCompatActivity {
 
         boolean noContent = true;
         for (Category cat : root_categories) {
-            RelativeLayout view = cat.getView(this,currency,show_empty);
+            RelativeLayout view = cat.getView(this,currency,hideEmpty);
             if (view != null) {
                 list.addView(view);
                 noContent = false;

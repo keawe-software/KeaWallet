@@ -78,4 +78,5 @@
     <string name="category_rent">Rent</string>
     <string name="category_electricity">Electricity</string>
     <string name="category_liability">Liability</string>
+    <string name="current_balance">Current balance: ?</string>
 </resources>

@@ -28,11 +28,19 @@ public class TransactionDetailActivity extends AppCompatActivity {
         final Transaction transaction = Transaction.load(id);
         ((TextView) findViewById(R.id.date_view)).setText(transaction.bdate("yyyy-MM-dd"));
         ((TextView) findViewById(R.id.value_view)).setText(transaction.value(transaction.currency()));
-        ((TextView) findViewById(R.id.participant_view)).setText(transaction.participant().name());
+        if (transaction.participant() != null) {
+            ((TextView) findViewById(R.id.participant_view)).setText(transaction.participant().name());
+        }
         ((TextView) findViewById(R.id.short_usage_view)).setText(transaction.niceUsage());
         ((TextView) findViewById(R.id.usage_view)).setText(transaction.usage());
-        ((TextView) findViewById(R.id.category_display)).setText(transaction.category() == null ? getString(R.string.no_category_assined) : transaction.category().name());
+        if (transaction.category() == null) {
+            ((TextView) findViewById(R.id.category_display)).setText(getString(R.string.no_category_assined));
+        } else {
+            ((TextView) findViewById(R.id.category_display)).setText(transaction.category().name());
+            transaction.setCategory(transaction.category(),false);
+        }
 
+        ((TextView) findViewById(R.id.text_view)).setText(transaction.text());
 
         ImageButton btn = (ImageButton) findViewById(R.id.drop_category_button);
         btn.setOnClickListener(new View.OnClickListener() {

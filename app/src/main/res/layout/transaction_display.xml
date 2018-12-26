@@ -39,4 +39,14 @@
         android:layout_alignParentEnd="true"
         android:paddingLeft="15px"
         android:text="Stephan Richter" />
+
+    <ImageView
+        android:id="@+id/category_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="#aaa"
+        android:visibility="visible"
+        android:src="@drawable/warn" />
 </RelativeLayout>

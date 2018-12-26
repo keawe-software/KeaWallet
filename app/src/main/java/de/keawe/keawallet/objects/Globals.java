@@ -33,7 +33,7 @@ public class Globals {
     public static SecretKeySpec encryption_key = null;
     private final static int ENCRYPTION_KEY_LENGTH = 32;
     private final static String ENCRYPTION_ALGORITHM = "AES";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 3;
 
     public static void d(Object o) {
         Log.d(APP_NAME,o.toString());
@@ -71,8 +71,15 @@ public class Globals {
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-
+        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+            Globals.d("Updating database:");
+            for (int version = oldVersion+1; version<=newVersion; version++) {
+                String sql = Transaction.getUpdate(version);
+                if (sql != null) {
+                    Globals.d(sql);
+                    sqLiteDatabase.execSQL(sql);
+                }
+            }
         }
     }
 

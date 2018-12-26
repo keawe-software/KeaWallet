@@ -28,16 +28,19 @@ public class Transaction implements Serializable {
     private final static String TABLE_NAME = "transactions";
     private final static String KEY = "id";
     private final static String ACCOUNT   = "bank_account";
+    private final static String AUTO_CAT  = "auto_cat";
     private final static String BDATE     = "bdate";
     private final static String CATEGORY  = "category";
     private final static String GVCODE    = "gv";
     private final static String INSTREF   = "instref";
     private final static String OTHER     = "other";
     private final static String PRIMANOTA = "primanota";
+    private final static String SALDO     = "saldo";
     private final static String TEXT      = "text";
     private final static String USAGE     = "usage";
     private final static String VALUE     = "value";
     private final static String VALUTA    = "valuta";
+
 
     public final static String TABLE_CREATION = "CREATE TABLE "+TABLE_NAME+"("+
             KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
@@ -55,12 +58,14 @@ public class Transaction implements Serializable {
 
     private long id = 0;
     private BankAccount account = null;
+    private boolean auto_cat = false;
     private Long bdate = null; // Buchungsdatum
     private Long category = null; // referenz auf category tabelle
     private Integer gvcode = null;
     private String instRef = null;
     private Long other = null;
     private Integer primanota = null;
+    private Long saldo = null;
     private Text text = null;
     private String usage = null;
     private Long value = null; // Cent
@@ -73,6 +78,7 @@ public class Transaction implements Serializable {
             String col = cursor.getColumnName(index);
             switch (col){
                 case KEY:       this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case AUTO_CAT:  this.auto_cat  = cursor.getInt(index)==1; break;
                 case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case CATEGORY:  this.category  = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
@@ -83,6 +89,7 @@ public class Transaction implements Serializable {
                 case VALUE:     this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case USAGE:     this.usage     = cursor.getString(index); break;
                 case TEXT:      this.text      = cursor.isNull(index) ? null : Text.get(cursor.getInt(index)); break;
+                case SALDO:     this.saldo     = cursor.isNull(index) ? null : cursor.getLong(index); break;
             }
         }
     }
@@ -95,6 +102,7 @@ public class Transaction implements Serializable {
         this.instRef   = hbciTransaction.instref   == null ? null : hbciTransaction.instref;
         this.other     = hbciTransaction.other     == null ? null : (new Participant(hbciTransaction.other)).getId();
         this.primanota = hbciTransaction.primanota == null ? null : Integer.parseInt(hbciTransaction.primanota);
+        this.saldo     = hbciTransaction.saldo.value.getLongValue();
         this.text      = hbciTransaction.text      == null ? null : Text.get(hbciTransaction.text);
         this.value     = hbciTransaction.value     == null ? null : hbciTransaction.value.getLongValue();
         this.valuta    = hbciTransaction.valuta    == null ? null : hbciTransaction.valuta.getTime();
@@ -123,7 +131,7 @@ public class Transaction implements Serializable {
         SQLiteDatabase db = Globals.readableDatabase();
 
         Vector<Transaction> transactions = new Vector<>();
-        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate > ? AND bdate < ?", new String[]{"" + account.id(), ""+start, ""+end}, null, null, null);
+        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate > ? AND bdate < ?", new String[]{"" + account.id(), ""+start, ""+end}, null, null,KEY);
         while (cursor.moveToNext()) transactions.add(new Transaction(cursor,account));
         cursor.close();
         db.close();
@@ -142,6 +150,16 @@ public class Transaction implements Serializable {
         cursor.close();
         db.close();
         return transaction;
+    }
+
+    public static String getUpdate(int version) {
+        switch (version){
+            case 2:
+                return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+AUTO_CAT+" BOOLEAN DEFAULT false";
+            case 3:
+                return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+SALDO+" LONG";
+        }
+        return null;
     }
 
     public Long bdate() {
@@ -192,6 +210,7 @@ public class Transaction implements Serializable {
         values.put(INSTREF,  instRef);
         values.put(OTHER,    other);
         values.put(PRIMANOTA,primanota);
+        values.put(SALDO,    saldo);
         values.put(TEXT,     text == null ? null : text.getId());
         values.put(USAGE,    usage);
         values.put(VALUE,    value);
@@ -213,6 +232,7 @@ public class Transaction implements Serializable {
     public String niceUsage() {
         String[] parts = usage.split("\n");
         StringBuffer sb = new StringBuffer();
+        if (text != null) sb.append(text.get()+"\n");
         for (String p:parts) {
             if (p.startsWith("EREF+")) continue;
             if (p.startsWith("MREF+")) continue;
@@ -247,10 +267,16 @@ public class Transaction implements Serializable {
     }
 
     public void setCategory(Category cat) {
+        this.setCategory(cat, false);
+    }
+
+    public void setCategory(Category cat, boolean auto) {
         System.out.println("Assigning "+cat+" to "+this);
         category = cat == null ? 0 : cat.getId();
+        auto_cat = auto;
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
+        values.put(AUTO_CAT,auto_cat);
         SQLiteDatabase db = Globals.writableDatabase();
         db.update(TABLE_NAME,values,KEY+" = "+id,null);
         db.close();
@@ -263,6 +289,7 @@ public class Transaction implements Serializable {
         ((TextView) layout.findViewById(R.id.transaction_usage_view)).setText(niceUsage());
         ((TextView) layout.findViewById(R.id.transaction_value_view)).setText(value(account.currency()));
         ((TextView) layout.findViewById(R.id.transaction_participant_view)).setText(participant()==null?"":participant().name());
+        layout.findViewById(R.id.category_warning).setVisibility(auto_cat?View.VISIBLE:View.GONE);
 
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -312,7 +339,7 @@ public class Transaction implements Serializable {
     }
 
     public double compare(Transaction transaction) {
-        return this.compareValue(transaction) * this.compareUsage(transaction) * this.compareParticipant(transaction);
+        return this.compareValue(transaction) * this.compareUsage(transaction) * this.compareParticipant(transaction) * this.compareText(transaction);
     }
 
     private double compareParticipant(Transaction transaction) {
@@ -332,5 +359,24 @@ public class Transaction implements Serializable {
     private double compareValue(Transaction transaction) {
         double x = this.value - transaction.value;
         return 1 - (x/(x+1));
+    }
+
+    private double compareText(Transaction transaction){
+        if (this.text == null){
+            if (transaction.text == null) return 0.8; // both transactions have no participant
+            return 0.2; // one has no participant, the other has
+        }
+        if (transaction.text == null) return 0.2;  // one has no participant, the other has
+        int x=Levenshtein.distance(this.text(),transaction.text());
+        return 1d/(1+x);
+    }
+
+    public String text() {
+        return text.get();
+    }
+
+    public String getSaldo() {
+        if (saldo == null) return "null";
+        return account.currency(saldo);
     }
 }

@@ -148,16 +148,6 @@ public class Category {
         final LinearLayout childList = (LinearLayout) layout.findViewById(R.id.category_child_list);
         for (View childView : childViews) childList.addView(childView);
 
-
-        Button assignButton = (Button) layout.findViewById(R.id.assign_category_button);
-        assignButton.setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+currency+")");
-        assignButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                transactionList.loadTransactioList(Category.this);
-            }
-        });
-
         final ImageButton collapseButton = (ImageButton) layout.findViewById(R.id.toggle_category_button);
         collapseButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,6 +155,20 @@ public class Category {
                 if (childList.getVisibility() == View.VISIBLE){
                     collapseButton.setImageResource(R.drawable.expand);
                     childList.setVisibility(View.GONE);
+                } else {
+                    collapseButton.setImageResource(R.drawable.collapse);
+                    childList.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        Button assignButton = (Button) layout.findViewById(R.id.assign_category_button);
+        assignButton.setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+currency+")");
+        assignButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (childList.getVisibility() == View.VISIBLE) {
+                    transactionList.loadTransactioList(Category.this);
                 } else {
                     collapseButton.setImageResource(R.drawable.collapse);
                     childList.setVisibility(View.VISIBLE);

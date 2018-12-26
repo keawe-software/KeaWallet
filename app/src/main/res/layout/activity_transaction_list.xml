@@ -27,16 +27,25 @@
             android:layout_height="wrap_content"
             android:id="@+id/account_selector" />
 
+        <TextView
+            android:id="@+id/current_balance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/account_selector"
+            android:text="@string/current_balance" />
+
         <LinearLayout
             android:id="@+id/first_uncategorized_transaction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/account_selector">
+            android:layout_below="@id/current_balance">
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/no_transaction_found"/>
         </LinearLayout>
+
+
 
         <ScrollView
             android:layout_width="match_parent"
