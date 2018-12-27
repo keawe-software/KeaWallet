@@ -85,7 +85,10 @@ public class FetchTransactions extends AppCompatActivity {
                                     transaction.saveToDb();
                                     updateNumber(accountEntry,account.number(),++count);
                                     Transaction similarTransaction = transaction.findMostSimilarIn(categorizedTransactions);
-                                    if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) transaction.setCategory(similarTransaction.category(),true);
+                                    if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) {
+                                        transaction.setMostSimilar(similarTransaction);
+                                        transaction.setCategory(similarTransaction.category(),true);
+                                    }
                                 }
                             }
                         } catch (ParserConfigurationException e) {

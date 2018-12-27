@@ -33,7 +33,7 @@ public class Globals {
     public static SecretKeySpec encryption_key = null;
     private final static int ENCRYPTION_KEY_LENGTH = 32;
     private final static String ENCRYPTION_ALGORITHM = "AES";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public static void d(Object o) {
         Log.d(APP_NAME,o.toString());

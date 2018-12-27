@@ -25,21 +25,22 @@ import de.keawe.keawallet.TransactionDetailActivity;
 import de.keawe.keawallet.objects.Globals;
 
 public class Transaction implements Serializable {
-    private final static String TABLE_NAME = "transactions";
-    private final static String KEY = "id";
-    private final static String ACCOUNT   = "bank_account";
-    private final static String AUTO_CAT  = "auto_cat";
-    private final static String BDATE     = "bdate";
-    private final static String CATEGORY  = "category";
-    private final static String GVCODE    = "gv";
-    private final static String INSTREF   = "instref";
-    private final static String OTHER     = "other";
-    private final static String PRIMANOTA = "primanota";
-    private final static String SALDO     = "saldo";
-    private final static String TEXT      = "text";
-    private final static String USAGE     = "usage";
-    private final static String VALUE     = "value";
-    private final static String VALUTA    = "valuta";
+    private final static String TABLE_NAME   = "transactions";
+    private final static String KEY          = "id";
+    private final static String ACCOUNT      = "bank_account";
+    private final static String AUTO_CAT     = "auto_cat";
+    private final static String BDATE        = "bdate";
+    private final static String CATEGORY     = "category";
+    private final static String GVCODE       = "gv";
+    private final static String INSTREF      = "instref";
+    private final static String MOST_SIMILAR = "similar";
+    private final static String OTHER        = "other";
+    private final static String PRIMANOTA    = "primanota";
+    private final static String SALDO        = "saldo";
+    private final static String TEXT         = "text";
+    private final static String USAGE        = "usage";
+    private final static String VALUE        = "value";
+    private final static String VALUTA       = "valuta";
 
 
     public final static String TABLE_CREATION = "CREATE TABLE "+TABLE_NAME+"("+
@@ -66,6 +67,7 @@ public class Transaction implements Serializable {
     private Long other = null;
     private Integer primanota = null;
     private Long saldo = null;
+    private Long similar = null;
     private Text text = null;
     private String usage = null;
     private Long value = null; // Cent
@@ -77,19 +79,20 @@ public class Transaction implements Serializable {
         for (int index = 0; index < cursor.getColumnCount(); index++){
             String col = cursor.getColumnName(index);
             switch (col){
-                case KEY:       this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case AUTO_CAT:  this.auto_cat  = cursor.getInt(index)==1; break;
-                case BDATE:     this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case CATEGORY:  this.category  = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case GVCODE:    this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
-                case INSTREF:   this.instRef   = cursor.getString(index); break;
-                case OTHER:     this.other     = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case PRIMANOTA: this.primanota = cursor.isNull(index) ? null : cursor.getInt(index); break;
-                case VALUTA:    this.valuta    = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case VALUE:     this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
-                case USAGE:     this.usage     = cursor.getString(index); break;
-                case TEXT:      this.text      = cursor.isNull(index) ? null : Text.get(cursor.getInt(index)); break;
-                case SALDO:     this.saldo     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case KEY:          this.id        = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case AUTO_CAT:     this.auto_cat  = cursor.getInt(index)==1; break;
+                case BDATE:        this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case CATEGORY:     this.category  = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case GVCODE:       this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
+                case INSTREF:      this.instRef   = cursor.getString(index); break;
+                case MOST_SIMILAR: this.similar = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case OTHER:        this.other     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case PRIMANOTA:    this.primanota = cursor.isNull(index) ? null : cursor.getInt(index); break;
+                case SALDO:        this.saldo     = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case TEXT:         this.text      = cursor.isNull(index) ? null : Text.get(cursor.getInt(index)); break;
+                case USAGE:        this.usage     = cursor.getString(index); break;
+                case VALUTA:       this.valuta    = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case VALUE:        this.value     = cursor.isNull(index) ? null : cursor.getLong(index); break;
             }
         }
     }
@@ -103,6 +106,7 @@ public class Transaction implements Serializable {
         this.other     = hbciTransaction.other     == null ? null : (new Participant(hbciTransaction.other)).getId();
         this.primanota = hbciTransaction.primanota == null ? null : Integer.parseInt(hbciTransaction.primanota);
         this.saldo     = hbciTransaction.saldo.value.getLongValue();
+        this.similar   = null;
         this.text      = hbciTransaction.text      == null ? null : Text.get(hbciTransaction.text);
         this.value     = hbciTransaction.value     == null ? null : hbciTransaction.value.getLongValue();
         this.valuta    = hbciTransaction.valuta    == null ? null : hbciTransaction.valuta.getTime();
@@ -138,6 +142,11 @@ public class Transaction implements Serializable {
         return transactions;
     }
 
+    public String getSaldo() {
+        if (saldo == null) return "null";
+        return account.currency(saldo);
+    }
+
     public static Transaction load(long id) {
         SQLiteDatabase db = Globals.readableDatabase();
         Transaction transaction = null;
@@ -158,6 +167,8 @@ public class Transaction implements Serializable {
                 return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+AUTO_CAT+" BOOLEAN DEFAULT false";
             case 3:
                 return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+SALDO+" LONG";
+            case 4:
+                return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+MOST_SIMILAR+" LONG";
         }
         return null;
     }
@@ -203,18 +214,19 @@ public class Transaction implements Serializable {
     public void saveToDb() {
         SQLiteDatabase db = Globals.writableDatabase();
         ContentValues values = new ContentValues();
-        values.put(ACCOUNT,  account.id());
-        values.put(BDATE,    bdate);
-        values.put(CATEGORY, category);
-        values.put(GVCODE,   gvcode);
-        values.put(INSTREF,  instRef);
-        values.put(OTHER,    other);
-        values.put(PRIMANOTA,primanota);
-        values.put(SALDO,    saldo);
-        values.put(TEXT,     text == null ? null : text.getId());
-        values.put(USAGE,    usage);
-        values.put(VALUE,    value);
-        values.put(VALUTA,   valuta);
+        values.put(ACCOUNT,      account.id());
+        values.put(BDATE,        bdate);
+        values.put(CATEGORY,     category);
+        values.put(GVCODE,       gvcode);
+        values.put(INSTREF,      instRef);
+        values.put(MOST_SIMILAR, similar);
+        values.put(OTHER,        other);
+        values.put(PRIMANOTA,    primanota);
+        values.put(SALDO,        saldo);
+        values.put(TEXT,         text == null ? null : text.getId());
+        values.put(USAGE,        usage);
+        values.put(VALUE,        value);
+        values.put(VALUTA,       valuta);
         this.id = db.insert(TABLE_NAME,null,values);
     }
 
@@ -325,7 +337,8 @@ public class Transaction implements Serializable {
                 similarity = sim;
                 result = transaction;
             }
-        }return result;
+        }
+        return result;
     }
 
     public static Vector<Transaction> loadCategorized(long account_id){
@@ -371,12 +384,18 @@ public class Transaction implements Serializable {
         return 1d/(1+x);
     }
 
+    public void setMostSimilar(Transaction similarTransaction) {
+        similar = similarTransaction.id;
+        System.out.println("Storing most similar transaction "+similarTransaction);
+        ContentValues values = new ContentValues();
+        values.put(MOST_SIMILAR,similar);
+        SQLiteDatabase db = Globals.writableDatabase();
+        db.update(TABLE_NAME,values,KEY+" = "+id,null);
+        db.close();
+    }
+
     public String text() {
         return text.get();
     }
 
-    public String getSaldo() {
-        if (saldo == null) return "null";
-        return account.currency(saldo);
-    }
 }
