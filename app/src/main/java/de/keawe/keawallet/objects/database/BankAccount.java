@@ -150,6 +150,6 @@ public class BankAccount {
     }
 
     public String currency(long value){
-        return value/100 + currency();
+        return value/100.0 + currency();
     }
 }
