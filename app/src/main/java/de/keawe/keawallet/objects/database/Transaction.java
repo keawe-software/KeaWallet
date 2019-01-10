@@ -47,13 +47,17 @@ public class Transaction implements Serializable {
     public final static String TABLE_CREATION = "CREATE TABLE "+TABLE_NAME+"("+
             KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
             ACCOUNT+" INT NOT NULL, "+
+            AUTO_CAT+" BOOLEAN DEFAULT false, "+
             BDATE+" LONG, "+
             CATEGORY+" INT DEFAULT 0, "+
+            EXP_REPEAT+" VARCHAR(7), "+
             GVCODE+" INT, "+
             INSTREF+" VARCHAR(255), "+
-            OTHER+" LONG,"+
+            MOST_SIMILAR+" LONG, "+
+            OTHER+" LONG, "+
             PRIMANOTA+" INT,"+
             TEXT+" INT, "+
+            SALDO+" LONG, "+
             USAGE+" VARCHAR(255), "+
             VALUE+" LONG, "+
             VALUTA+" LONG)";
@@ -498,6 +502,7 @@ public class Transaction implements Serializable {
     }
 
     public String text() {
+        if (text == null) return null;
         return text.get();
     }
 

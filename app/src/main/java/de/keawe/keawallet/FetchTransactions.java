@@ -2,6 +2,7 @@ package de.keawe.keawallet;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -154,6 +155,14 @@ public class FetchTransactions extends AppCompatActivity {
                 }
 
                 setProgressBarVisibility(View.INVISIBLE);
+                SystemClock.sleep(2000);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
+
                 state = IDLE;
                 return null;
             }
@@ -175,6 +184,7 @@ public class FetchTransactions extends AppCompatActivity {
             @Override
             public void run() {
                 findViewById(R.id.fetch_transactions_spinner).setVisibility(visibility);
+
             }
         });
     }

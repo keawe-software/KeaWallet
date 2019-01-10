@@ -114,35 +114,60 @@ public class AddAccount extends AppCompatActivity implements AccountSetupListene
     }
 
     @Override
-    public void notifyHandlerCreated(boolean success) {
-        TextView tv = (TextView) findViewById(R.id.check_data_state);
-        tv.setText(getText(R.string.check_data_info)+""+getText(success?R.string.success:R.string.failed));
+    public void notifyHandlerCreated(final boolean success) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView tv = (TextView) findViewById(R.id.check_data_state);
+                tv.setText(getText(R.string.check_data_info)+""+getText(success?R.string.success:R.string.failed));
+            }
+        });
     }
 
     @Override
-    public void notifyLoggedIn(boolean success) {
-        TextView tv = (TextView) findViewById(R.id.server_connect_state);
-        tv.setText(getText(R.string.connect_info)+""+getText(success?R.string.success:R.string.failed));
+    public void notifyLoggedIn(final boolean success) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView tv = (TextView) findViewById(R.id.server_connect_state);
+                tv.setText(getText(R.string.connect_info)+""+getText(success?R.string.success:R.string.failed));
+
+            }
+        });
     }
 
     @Override
-    public void notifyJobDone(boolean success) {
-        if (success) {
-        } else {
-            findViewById(R.id.add_account_button).setEnabled(true);
+    public void notifyJobDone(final boolean success) {
+        if (!success) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    findViewById(R.id.add_account_button).setEnabled(true);
+                }
+            });
         }
     }
 
     @Override
-    public void notifyAccount(String accountNumber, String saldoString, String currency) {
-        TextView tv = (TextView) findViewById(R.id.account_state);
-        tv.setText(getText(R.string.account_info)+" "+accountNumber+" ("+saldoString+" "+currency+")");
+    public void notifyAccount(final String accountNumber, final String saldoString, final String currency) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView tv = (TextView) findViewById(R.id.account_state);
+                tv.setText(getText(R.string.account_info)+" "+accountNumber+" ("+saldoString+" "+currency+")");
+            }
+        });
     }
 
     @Override
-    public void notifyFoundAccounts(Vector<BankAccount> accounts) {
-        TextView tv = (TextView) findViewById(R.id.account_state);
-        tv.setText(String.format(getString(R.string.account_summary),accounts.size()));
+    public void notifyFoundAccounts(final Vector<BankAccount> accounts) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView tv = (TextView) findViewById(R.id.account_state);
+                tv.setText(String.format(getString(R.string.account_summary),accounts.size()));
+            }
+        });
     }
 
     @Override

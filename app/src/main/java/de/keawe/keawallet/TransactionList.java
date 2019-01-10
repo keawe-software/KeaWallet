@@ -261,6 +261,7 @@ public class TransactionList extends AppCompatActivity {
         } else {
             Transaction unassignedtransaction = unassignedtransactions.peek();
             RelativeLayout unassignedTransactionDisplay = unassignedtransaction.getView(this);
+            unassignedTransactionDisplay.setBackgroundColor(Globals.color(R.color.yellow));
             display.addView(unassignedTransactionDisplay);
             infoButton.setVisibility(View.VISIBLE);
         }
