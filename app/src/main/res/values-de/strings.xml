@@ -72,4 +72,8 @@
     <string name="expected">erwartet:</string>
     <string name="unknown_saldo">unbekannt</string>
     <string name="expected_sum">/ erwartete Umsätze: ?</string>
+    <string name="in_x_days">In ? Tagen:</string>
+    <string name="x_days_ago">Vor ? Tagen:</string>
+    <string name="today">Heute:</string>
+    <string name="tomorrow">Morgen:</string>
 </resources>

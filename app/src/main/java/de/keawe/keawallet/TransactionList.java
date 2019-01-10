@@ -228,8 +228,15 @@ public class TransactionList extends AppCompatActivity {
         }
 
         { // add expected transactions to categories
+            Calendar firstOfMonth = Globals.firstOf(month);
             Vector<Transaction> expectedTransactions = account.expectedTransactions(month);
             for (Transaction transaction : expectedTransactions){
+                Calendar expectedDate = Calendar.getInstance();
+                long now = expectedDate.getTimeInMillis();
+                expectedDate.setTimeInMillis(transaction.bdate());
+                while (expectedDate.before(firstOfMonth)) expectedDate.add(Calendar.MONTH,1);
+                transaction.setBDate(expectedDate.getTimeInMillis() - now);
+
                 Category cat = transaction.category();
                 if (currency == null) currency = transaction.currency();
                 if (cat == null) continue;

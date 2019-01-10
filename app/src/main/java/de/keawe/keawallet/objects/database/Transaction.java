@@ -371,7 +371,20 @@ public class Transaction implements Serializable {
         RelativeLayout layout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.transaction_display,null);
         int gray = Globals.color(R.color.gray);
         TextView tv = ((TextView) layout.findViewById(R.id.transaction_date_view));
-        tv.setText(Globals.string(R.string.expected));
+
+        long days = bdate / (24 * 3600 * 1000);
+        if (days == 0) {
+            tv.setText(R.string.today);
+        } else if (days == 1){
+            tv.setText(R.string.tomorrow);
+        } else if (days < 0){
+            tv.setText(Globals.string(R.string.x_days_ago).replace("?",-days+""));
+        } else {
+            tv.setText(Globals.string(R.string.in_x_days).replace("?",""+days));
+        }
+
+
+
         tv.setTextColor(gray);
         tv.setMinWidth(200);
         tv = ((TextView) layout.findViewById(R.id.transaction_usage_view));
@@ -506,5 +519,9 @@ public class Transaction implements Serializable {
 
     public String expectedRepetition() {
         return exp_repeat;
+    }
+
+    public void setBDate(long timestamp) {
+        bdate = timestamp;
     }
 }

@@ -83,4 +83,8 @@
     <string name="expected">expected:</string>
     <string name="unknown_saldo">unknwon</string>
     <string name="expected_sum">/ expected transactions: ?</string>
+    <string name="in_x_days">In ? days:</string>
+    <string name="x_days_ago">\? days ago:</string>
+    <string name="today">Today:</string>
+    <string name="tomorrow">Tomorrow:</string>
 </resources>
