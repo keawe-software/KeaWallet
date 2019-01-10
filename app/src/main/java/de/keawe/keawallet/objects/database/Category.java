@@ -128,7 +128,7 @@ public class Category {
     }
 
     public RelativeLayout getView(final TransactionList transactionList, String currency, boolean hideEmpty) {
-        Vector<View> childViews = new Vector<>();
+        final Vector<View> childViews = new Vector<>();
         sum = 0;
         for (Category child : children()){
             RelativeLayout childView = child.getView(transactionList,currency,hideEmpty);
@@ -167,7 +167,7 @@ public class Category {
         assignButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (childList.getVisibility() == View.VISIBLE) {
+                if (childList.getVisibility() == View.VISIBLE || childViews.isEmpty()) {
                     transactionList.loadTransactioList(Category.this);
                 } else {
                     collapseButton.setImageResource(R.drawable.collapse);

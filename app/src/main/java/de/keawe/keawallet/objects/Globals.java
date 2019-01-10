@@ -33,7 +33,7 @@ public class Globals {
     public static SecretKeySpec encryption_key = null;
     private final static int ENCRYPTION_KEY_LENGTH = 32;
     private final static String ENCRYPTION_ALGORITHM = "AES";
-    public static final int DB_VERSION = 4;
+    public static final int DB_VERSION = 5;
 
     public static void d(Object o) {
         Log.d(APP_NAME,o.toString());
@@ -50,6 +50,11 @@ public class Globals {
         date.set(Calendar.MINUTE,0);
         date.set(Calendar.SECOND,0);
         return date;
+    }
+
+    public static String yearDate(Calendar date) {
+        int dummy = date.get(Calendar.MONTH)+1;
+        return date.get(Calendar.YEAR)+"-"+(dummy<10?"0":"")+dummy;
     }
 
     public static class DBHelper extends SQLiteOpenHelper{

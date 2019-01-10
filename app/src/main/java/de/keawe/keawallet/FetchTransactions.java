@@ -14,6 +14,7 @@ import org.kapott.hbci.GV_Result.GVRKUms;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,6 +23,7 @@ import javax.xml.transform.TransformerException;
 import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.BankAccount;
 import de.keawe.keawallet.objects.database.BankLogin;
+import de.keawe.keawallet.objects.database.Category;
 import de.keawe.keawallet.objects.database.Transaction;
 
 public class FetchTransactions extends AppCompatActivity {
@@ -85,9 +87,30 @@ public class FetchTransactions extends AppCompatActivity {
                                     transaction.saveToDb();
                                     updateNumber(accountEntry,account.number(),++count);
                                     Transaction similarTransaction = transaction.findMostSimilarIn(categorizedTransactions);
-                                    if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) {
-                                        transaction.setMostSimilar(similarTransaction);
-                                        transaction.setCategory(similarTransaction.category(),true);
+                                    if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) { // transaction is sufficiently similar
+                                        transaction.setMostSimilar(similarTransaction); // add a reference to the similar transaction
+                                        Category category = similarTransaction.category(); // get the category from the similar transaction
+                                        transaction.setCategory(category,true); // assign that category to the new transaction
+                                        long dayDiff = (transaction.bdate() - similarTransaction.bdate()) / (1000 * 3600 * 24); // time difference between new transaction and similar (in days)
+                                        Calendar expectedDate = Calendar.getInstance(); // prepare expectedDate
+                                        expectedDate.setTimeInMillis(transaction.bdate());
+
+                                        if (dayDiff>25 && dayDiff<37) {
+                                            expectedDate.add(Calendar.MONTH,1); // similar transaction was about a month ago
+                                            transaction.expectRepetition(Globals.yearDate(expectedDate)); // expect repetition in a month
+                                        }
+                                        if (dayDiff>55 && dayDiff<70) {
+                                            expectedDate.add(Calendar.MONTH,2); // similar transaction was about two months ago
+                                            transaction.expectRepetition(Globals.yearDate(expectedDate)); // expect repetition in two months
+                                        }
+                                        if (dayDiff>85 && dayDiff<100) {
+                                            expectedDate.add(Calendar.MONTH,3); // similar transaction was about three months ago
+                                            transaction.expectRepetition(Globals.yearDate(expectedDate)); // expect repetition in three months
+                                        }
+                                        if (dayDiff>175 && dayDiff<190) {
+                                            expectedDate.add(Calendar.MONTH,6); // similar transaction was about six months ago
+                                            transaction.expectRepetition(Globals.yearDate(expectedDate)); // expect repetition in six months
+                                        }
                                     }
                                 }
                             }

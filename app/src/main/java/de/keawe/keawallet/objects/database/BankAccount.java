@@ -58,6 +58,9 @@ public class BankAccount {
                 case CURRENCY:
                     currency = cursor.getString(index);
                     break;
+                case LOGIN:
+                    bankLogin = BankLogin.load(cursor.getLong(index));
+                    break;
             }
         }
     }

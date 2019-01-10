@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import java.io.Serializable;
 
+import de.keawe.keawallet.objects.Globals;
 import de.keawe.keawallet.objects.database.Transaction;
 
 public class TransactionDetailActivity extends AppCompatActivity {
@@ -41,6 +42,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
         }
 
         ((TextView) findViewById(R.id.text_view)).setText(transaction.text());
+
+        if (transaction.expectedRepetition()!=null) ((TextView) findViewById(R.id.repeat_view)).setText(Globals.string(R.string.expected_repetition).replace("?",transaction.expectedRepetition()));
 
         ImageButton btn = (ImageButton) findViewById(R.id.drop_category_button);
         btn.setOnClickListener(new View.OnClickListener() {

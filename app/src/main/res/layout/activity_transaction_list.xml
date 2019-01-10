@@ -179,6 +179,14 @@
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:src="@drawable/update" />
+
+        <ImageButton
+            android:id="@+id/analyzeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/analyze" />
+
     </LinearLayout>
 
     <RelativeLayout

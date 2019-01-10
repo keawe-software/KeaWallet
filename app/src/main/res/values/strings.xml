@@ -79,4 +79,5 @@
     <string name="category_electricity">Electricity</string>
     <string name="category_liability">Liability</string>
     <string name="current_balance">Current balance: ?</string>
+    <string name="expected_repetition">Expected repetition: ?</string>
 </resources>

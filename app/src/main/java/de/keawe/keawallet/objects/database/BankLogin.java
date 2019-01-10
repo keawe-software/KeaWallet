@@ -75,41 +75,56 @@ public class BankLogin extends HBCICallbackConsole  {
         this.encryptedPin = encryptedPin;
     }
 
+    public static BankLogin load(long id){
+        SQLiteDatabase db = Globals.readableDatabase();
+
+        Cursor cursor = db.query(TABLE_NAME, null, "id = "+id, null, null, null, null);
+        if (cursor.moveToNext()){
+            return BankLogin.load(cursor);
+        } else return null;
+    }
+
+    public static BankLogin load(Cursor cursor){
+        long id =0;
+        String blz = null, login = null, encryptedPin = null;
+
+        for (int index = 0; index < cursor.getColumnCount(); index++){
+            String name = cursor.getColumnName(index);
+            switch (name){
+                case KEY:
+                    id = cursor.getInt(index);
+                    break;
+                case LOGIN:
+                    login = cursor.getString(index);
+                    break;
+                case ENCRYPTED_PIN:
+                    encryptedPin = cursor.getString(index);
+                    break;
+                case INSTITUTE:
+                    blz = cursor.getString(index);
+                    break;
+
+            }
+        }
+        try {
+            CreditInstitute institute = CreditInstitute.get(blz);
+            BankLogin bankLogin = new BankLogin(institute, login, encryptedPin);
+            bankLogin.id = id;
+            return bankLogin;
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    return null;
+    }
+
     public static Vector<BankLogin> loadAll() {
         SQLiteDatabase db = Globals.readableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
 
         Vector<BankLogin> logins = new Vector<>();
         while (cursor.moveToNext()){
-            long id =0;
-            String blz = null, login = null, encryptedPin = null;
-
-            for (int index = 0; index < cursor.getColumnCount(); index++){
-                String name = cursor.getColumnName(index);
-                switch (name){
-                    case KEY:
-                        id = cursor.getInt(index);
-                        break;
-                    case LOGIN:
-                        login = cursor.getString(index);
-                        break;
-                    case ENCRYPTED_PIN:
-                        encryptedPin = cursor.getString(index);
-                        break;
-                    case INSTITUTE:
-                        blz = cursor.getString(index);
-                        break;
-
-                }
-            }
-            try {
-                CreditInstitute institute = CreditInstitute.get(blz);
-                BankLogin bankLogin = new BankLogin(institute, login, encryptedPin);
-                bankLogin.id = id;
-                logins.add(bankLogin);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            BankLogin bankLogin = BankLogin.load(cursor);
+            if (bankLogin != null) logins.add(bankLogin);
         }
         cursor.close();
         db.close();

@@ -31,6 +31,7 @@ public class Transaction implements Serializable {
     private final static String AUTO_CAT     = "auto_cat";
     private final static String BDATE        = "bdate";
     private final static String CATEGORY     = "category";
+    private final static String EXP_REPEAT   = "exp_repeat";
     private final static String GVCODE       = "gv";
     private final static String INSTREF      = "instref";
     private final static String MOST_SIMILAR = "similar";
@@ -73,6 +74,7 @@ public class Transaction implements Serializable {
     private Long value = null; // Cent
     private Long valuta = null; // Wertstellung
     private String hash = null;
+    private String exp_repeat = null; // YYYY-MM der erwarteten Wiederholung der Transaktion
 
     public Transaction(Cursor cursor, BankAccount account) {
         this.account = account;
@@ -83,6 +85,7 @@ public class Transaction implements Serializable {
                 case AUTO_CAT:     this.auto_cat  = cursor.getInt(index)==1; break;
                 case BDATE:        this.bdate     = cursor.isNull(index) ? null : cursor.getLong(index); break;
                 case CATEGORY:     this.category  = cursor.isNull(index) ? null : cursor.getLong(index); break;
+                case EXP_REPEAT:   this.exp_repeat= cursor.getString(index); break;
                 case GVCODE:       this.gvcode    = cursor.isNull(index) ? null : cursor.getInt(index); break;
                 case INSTREF:      this.instRef   = cursor.getString(index); break;
                 case MOST_SIMILAR: this.similar = cursor.isNull(index) ? null : cursor.getLong(index); break;
@@ -142,6 +145,17 @@ public class Transaction implements Serializable {
         return transactions;
     }
 
+    public static void reassign(int fromAccountId, int toAccountId) {
+        BankAccount fromAccount = BankAccount.load(fromAccountId);
+        BankAccount toAccount = BankAccount.load(toAccountId);
+        System.out.println("Changing assignment of transactions from "+fromAccount+" to "+toAccount);
+        SQLiteDatabase db = Globals.writableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ACCOUNT,toAccountId);
+        db.update(TABLE_NAME,values,ACCOUNT+" = "+fromAccountId,null);
+        db.close();
+    }
+
     public String getSaldo() {
         if (saldo == null) return "null";
         return account.currency(saldo);
@@ -169,6 +183,8 @@ public class Transaction implements Serializable {
                 return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+SALDO+" LONG";
             case 4:
                 return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+MOST_SIMILAR+" LONG";
+            case 5:
+                return "ALTER TABLE "+TABLE_NAME+" ADD COLUMN "+EXP_REPEAT+" VARCHAR(7)";
         }
         return null;
     }
@@ -218,6 +234,7 @@ public class Transaction implements Serializable {
         values.put(BDATE,        bdate);
         values.put(CATEGORY,     category);
         values.put(GVCODE,       gvcode);
+        values.put(EXP_REPEAT,   exp_repeat);
         values.put(INSTREF,      instRef);
         values.put(MOST_SIMILAR, similar);
         values.put(OTHER,        other);
@@ -284,11 +301,21 @@ public class Transaction implements Serializable {
 
     public void setCategory(Category cat, boolean auto) {
         System.out.println("Assigning "+cat+" to "+this);
-        category = cat == null ? 0 : cat.getId();
+        category = (cat == null) ? 0 : cat.getId();
         auto_cat = auto;
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
         values.put(AUTO_CAT,auto_cat);
+        SQLiteDatabase db = Globals.writableDatabase();
+        db.update(TABLE_NAME,values,KEY+" = "+id,null);
+        db.close();
+    }
+
+    public void setAccount(BankAccount bankAccount){
+        System.out.println("Assigning transaction to "+bankAccount);
+        account = bankAccount;
+        ContentValues values = new ContentValues();
+        values.put(ACCOUNT,account.id());
         SQLiteDatabase db = Globals.writableDatabase();
         db.update(TABLE_NAME,values,KEY+" = "+id,null);
         db.close();
@@ -344,11 +371,22 @@ public class Transaction implements Serializable {
     public static Vector<Transaction> loadCategorized(long account_id){
         Vector<Transaction> transactions = new Vector<>();
         SQLiteDatabase db = Globals.readableDatabase();
-        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0 AND "+ACCOUNT+" = "+account_id,null, null, null, null);
+        Cursor cursor = db.query(TABLE_NAME,null,CATEGORY+" != 0 AND "+ACCOUNT+" = "+account_id,null, null, null, "id DESC");
         while (cursor.moveToNext()) transactions.add(new Transaction(cursor, null));
         cursor.close();
         db.close();
         return transactions;
+    }
+
+    public static Transaction first(long account_id){
+        Transaction trans = null;
+        SQLiteDatabase db = Globals.readableDatabase();
+        BankAccount account = BankAccount.load(account_id);
+        Cursor cursor = db.query(TABLE_NAME,null,ACCOUNT+" = "+account_id,null, null, null, "id ASC", "1");
+        if (cursor.moveToNext()) trans = new Transaction(cursor, account);
+        cursor.close();
+        db.close();
+        return trans;
     }
 
     public double compare(Transaction transaction) {
@@ -385,7 +423,7 @@ public class Transaction implements Serializable {
     }
 
     public void setMostSimilar(Transaction similarTransaction) {
-        similar = similarTransaction.id;
+        similar = similarTransaction==null?null:similarTransaction.id;
         System.out.println("Storing most similar transaction "+similarTransaction);
         ContentValues values = new ContentValues();
         values.put(MOST_SIMILAR,similar);
@@ -398,4 +436,23 @@ public class Transaction implements Serializable {
         return text.get();
     }
 
+    public long id() {
+        return id;
+    }
+
+    public Long similar() {
+        return similar;
+    }
+
+    public void expectRepetition(String exp) {
+        ContentValues values = new ContentValues();
+        values.put(EXP_REPEAT,exp);
+        SQLiteDatabase db = Globals.writableDatabase();
+        db.update(TABLE_NAME,values,KEY+" = "+id,null);
+        db.close();
+    }
+
+    public String expectedRepetition() {
+        return exp_repeat;
+    }
 }

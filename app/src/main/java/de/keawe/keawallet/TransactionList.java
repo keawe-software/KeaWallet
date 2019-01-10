@@ -124,14 +124,14 @@ public class TransactionList extends AppCompatActivity {
         }
     }
 
-    public void changeMonth(int d){
-        month.add(Calendar.MONTH,d);
+    public void changeMonth(int months){
+        month.add(Calendar.MONTH,months); // add or subtract the number of months
         Calendar now = Calendar.getInstance();
         now.add(Calendar.MONTH,-1);
         findViewById(R.id.right_button).setVisibility(month.after(now)?View.GONE:View.VISIBLE);
 
-        int dummy = month.get(Calendar.MONTH)+1;
-        setTitle(getString(R.string.app_name)+" - "+month.get(Calendar.YEAR)+"-"+(dummy<10?"0":"")+dummy);
+
+        setTitle(getString(R.string.app_name)+" - "+Globals.yearDate(month));
 
         loadTransactioList(null);
     }
@@ -154,7 +154,7 @@ public class TransactionList extends AppCompatActivity {
         }
 
         TextView balance = (TextView) findViewById(R.id.current_balance);
-        balance.setText(getString(R.string.current_balance).replace("?",transactions.lastElement().getSaldo()));
+        if (!transactions.isEmpty()) balance.setText(getString(R.string.current_balance).replace("?",transactions.lastElement().getSaldo()));
 
         LinearLayout display = (LinearLayout) findViewById(R.id.first_uncategorized_transaction);
         display.removeAllViews();
