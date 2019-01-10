@@ -145,7 +145,7 @@ public class Transaction implements Serializable {
         return transactions;
     }
 
-    public static void reassign(int fromAccountId, int toAccountId) {
+    public static void reassign(long fromAccountId, long toAccountId) {
         BankAccount fromAccount = BankAccount.load(fromAccountId);
         BankAccount toAccount = BankAccount.load(toAccountId);
         System.out.println("Changing assignment of transactions from "+fromAccount+" to "+toAccount);
@@ -161,10 +161,10 @@ public class Transaction implements Serializable {
         return account.currency(saldo);
     }
 
-    public static Transaction load(long id) {
+    public static Transaction load(long transaction_id) {
         SQLiteDatabase db = Globals.readableDatabase();
         Transaction transaction = null;
-        Cursor cursor = db.query(TABLE_NAME,null,KEY+" = "+id,null,null,null, null);
+        Cursor cursor = db.query(TABLE_NAME,null,KEY+" = "+transaction_id,null,null,null, null);
         if (cursor.moveToNext()) {
             long account_id = cursor.getLong(cursor.getColumnIndex(ACCOUNT));
             BankAccount account = BankAccount.load(account_id);
@@ -193,16 +193,17 @@ public class Transaction implements Serializable {
         return bdate;
     }
 
-    public static Vector<Transaction> getLastFor(BankAccount account) {
+    public static Vector<Transaction> getLastFor(long bankAccountId) {
         SQLiteDatabase db = Globals.readableDatabase();
 
         Vector<Transaction> lastTransactions = new Vector<>();
         Long lastDate = null;
-        Cursor cursor = db.query(TABLE_NAME, new String[]{ BDATE },ACCOUNT + " = ?", new String[]{"" + account.id()},null,null,BDATE + " DESC","1");
+        Cursor cursor = db.query(TABLE_NAME, new String[]{ BDATE },ACCOUNT + " = ?", new String[]{"" + bankAccountId},null,null,BDATE + " DESC","1");
         if (cursor.moveToNext()) lastDate = cursor.getLong(0);
         if (lastDate != null){
-            cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate = ?", new String[]{"" + account.id(), ""+lastDate}, null, null, null);
-            while (cursor.moveToNext()) lastTransactions.add(new Transaction(cursor,account));
+            BankAccount bankAccout = BankAccount.load(bankAccountId);
+            cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND bdate = ?", new String[]{"" + bankAccountId, ""+lastDate}, null, null, null);
+            while (cursor.moveToNext()) lastTransactions.add(new Transaction(cursor,bankAccout));
         }
         cursor.close();
         db.close();
@@ -300,8 +301,13 @@ public class Transaction implements Serializable {
     }
 
     public void setCategory(Category cat, boolean auto) {
-        System.out.println("Assigning "+cat+" to "+this);
-        category = (cat == null) ? 0 : cat.getId();
+        if (cat == null){
+            if (category == 0l) System.out.println("Removing category from "+this.niceUsage());
+            category = 0l;
+        } else {
+            if (category == null || category != cat.getId()) System.out.println("Assigning category '"+cat.full()+"' with "+this.niceUsage());
+            category = cat.getId();
+        }
         auto_cat = auto;
         ContentValues values = new ContentValues();
         values.put(CATEGORY,category);
@@ -356,10 +362,14 @@ public class Transaction implements Serializable {
     }
 
     public Transaction findMostSimilarIn(Vector<Transaction> transactionList) {
+        System.out.println("Got "+this);
+        System.out.println("Comparing: ");
         double similarity = 0;
         Transaction result = null;
         for(Transaction transaction:transactionList) {
             double sim = this.compare(transaction);
+            long dayDiff = (this.bdate - transaction.bdate) / (24 * 3600 * 1000);
+            System.out.println(" - Transaction "+transaction.id+" ("+dayDiff+" days before current transaction): "+sim);
             if (sim >= similarity) {
                 similarity = sim;
                 result = transaction;
@@ -408,7 +418,7 @@ public class Transaction implements Serializable {
     }
 
     private double compareValue(Transaction transaction) {
-        double x = this.value - transaction.value;
+        double x = Math.abs(this.value - transaction.value);
         return 1 - (x/(x+1));
     }
 
@@ -423,8 +433,14 @@ public class Transaction implements Serializable {
     }
 
     public void setMostSimilar(Transaction similarTransaction) {
-        similar = similarTransaction==null?null:similarTransaction.id;
-        System.out.println("Storing most similar transaction "+similarTransaction);
+        if (similarTransaction == null){
+            System.out.println("Resetting similar transaction.");
+            similar = null;
+        } else {
+            System.out.println("Storing most similar transaction "+similarTransaction.id());
+            similar = similarTransaction.id;
+        }
+
         ContentValues values = new ContentValues();
         values.put(MOST_SIMILAR,similar);
         SQLiteDatabase db = Globals.writableDatabase();

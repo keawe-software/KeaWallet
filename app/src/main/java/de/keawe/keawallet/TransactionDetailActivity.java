@@ -38,7 +38,7 @@ public class TransactionDetailActivity extends AppCompatActivity {
             ((TextView) findViewById(R.id.category_display)).setText(getString(R.string.no_category_assined));
         } else {
             ((TextView) findViewById(R.id.category_display)).setText(transaction.category().name());
-            transaction.setCategory(transaction.category(),false);
+            transaction.setCategory(transaction.category(),false); // remove auto flag!
         }
 
         ((TextView) findViewById(R.id.text_view)).setText(transaction.text());

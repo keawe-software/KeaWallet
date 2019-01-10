@@ -56,7 +56,7 @@ public class FetchTransactions extends AppCompatActivity {
 
     public static void recognizeTransaction(Transaction transaction, Vector<Transaction> categorizedTransactions){
         Transaction similarTransaction = transaction.findMostSimilarIn(categorizedTransactions);
-        if (similarTransaction != null && transaction.compare(similarTransaction) > 0.001) { // transaction is sufficiently similar
+        if (similarTransaction != null && transaction.compare(similarTransaction) > 0.0001) { // transaction is sufficiently similar
             transaction.setMostSimilar(similarTransaction); // add a reference to the similar transaction
             Category category = similarTransaction.category(); // get the category from the similar transaction
             transaction.setCategory(category,true); // assign that category to the new transaction
@@ -91,7 +91,7 @@ public class FetchTransactions extends AppCompatActivity {
             @Override
             protected Void doInBackground(Void... voids) {
                 setProgressBarVisibility(View.VISIBLE);
-
+                long day = 24*3600*1000;
                 for (BankLogin login : logins){
                     TextView bankEntry = new TextView(FetchTransactions.this);
                     bankEntry.setText(getString(R.string.fetch_login_transactions).replace("#",login.getInstitute().name()));
@@ -99,7 +99,7 @@ public class FetchTransactions extends AppCompatActivity {
                     for (BankAccount account : login.accounts()){
                         Vector<Transaction> categorizedTransactions = Transaction.loadCategorized(account.id());
 
-                        Vector<Transaction> lastTransactions = Transaction.getLastFor(account);
+                        Vector<Transaction> lastTransactions = Transaction.getLastFor(account.id());
                         Long lastDate = lastTransactions.isEmpty() ? null : lastTransactions.lastElement().bdate();
 
                         TextView accountEntry = new TextView(FetchTransactions.this);
@@ -112,10 +112,28 @@ public class FetchTransactions extends AppCompatActivity {
                             if (!transactions.isOK()) continue;
                             for (GVRKUms.UmsLine hbciTransaction:transactions.getFlatData()){
                                 Transaction transaction = new Transaction(hbciTransaction,account);
-                                if (!transaction.in(lastTransactions)) {
+                                if (!transaction.in(lastTransactions)) { // transaction is not in the list of the last transactions, i.e. it is new!
                                     transaction.saveToDb();
                                     updateNumber(accountEntry,account.number(),++count);
-                                    recognizeTransaction(transaction,categorizedTransactions);
+                                    Long transactionTimeStamp = transaction.bdate();
+
+                                    long dateLimit35 = transactionTimeStamp - 35 * day; // timestamp dating back 35 days before transaction
+                                    long dateLimit65 = transactionTimeStamp - 65 * day; // timestamp dating back 65 days before transaction
+                                    Vector<Transaction>transactions35 = new Vector<>();
+                                    Vector<Transaction>transactions65 = new Vector<>();
+                                    Vector<Transaction>olderTransactions = new Vector<>();
+
+                                    for (Transaction t:categorizedTransactions){
+                                        if (t.bdate() > dateLimit35){
+                                            transactions35.add(t);
+                                        } else if (t.bdate() > dateLimit65){
+                                            transactions65.add(t);
+                                        } else olderTransactions.add(t);
+                                    }
+
+                                    FetchTransactions.recognizeTransaction(transaction, transactions35); // compare with transactions of the last 35 days
+                                    if (transaction.category() == null) FetchTransactions.recognizeTransaction(transaction, transactions65); // compare with transactions of the last 65 days
+                                    if (transaction.category() == null) FetchTransactions.recognizeTransaction(transaction, olderTransactions); // compare with older transactions
                                 }
                             }
                         } catch (ParserConfigurationException e) {
