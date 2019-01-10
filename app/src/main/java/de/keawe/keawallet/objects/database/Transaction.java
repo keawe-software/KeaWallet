@@ -263,6 +263,7 @@ public class Transaction implements Serializable {
         values.put(VALUE,        value);
         values.put(VALUTA,       valuta);
         this.id = db.insert(TABLE_NAME,null,values);
+        db.close();
     }
 
     @Override
