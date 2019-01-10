@@ -29,12 +29,23 @@
 
         <TextView
             android:id="@+id/current_balance"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/account_selector"
             android:layout_marginLeft="20px"
+            android:textColor="@color/black"
             android:textSize="15sp"
             android:text="@string/current_balance" />
+
+        <TextView
+            android:id="@+id/expected_sum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/current_balance"
+            android:layout_below="@id/account_selector"
+            android:layout_marginLeft="10px"
+            android:textSize="15sp"
+            android:text="@string/expected_sum" />
 
         <LinearLayout
             android:id="@+id/first_uncategorized_transaction"
@@ -179,13 +190,13 @@
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:src="@drawable/update" />
-
+<!--
         <ImageButton
             android:id="@+id/analyzeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            android:src="@drawable/analyze" />
+            android:src="@drawable/analyze" /> -->
 
     </LinearLayout>
 

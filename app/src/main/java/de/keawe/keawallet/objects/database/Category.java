@@ -36,7 +36,9 @@ public class Category {
     private long id = 0;
     private RelativeLayout layout = null;
     private Vector<Transaction> transactions = new Vector<>();
+    private Vector<Transaction> expectedTransactions = new Vector<>();
     private int sum = 0;
+    private int expectedSum = 0;
 
     public Category(String def, long parent_id) {
         definition = def;
@@ -130,17 +132,27 @@ public class Category {
     public RelativeLayout getView(final TransactionList transactionList, String currency, boolean hideEmpty) {
         final Vector<View> childViews = new Vector<>();
         sum = 0;
+        expectedSum = 0;
         for (Category child : children()){
             RelativeLayout childView = child.getView(transactionList,currency,hideEmpty);
             if (childView != null) {
                 childViews.add(childView);
                 sum += child.sum;
+                expectedSum += child.expectedSum;
             }
         }
         for (Transaction transaction : transactions){
             childViews.add(transaction.getView(transactionList));
             sum += transaction.value();
         }
+
+        for (Transaction expectedTransaction : expectedTransactions){
+            RelativeLayout v = expectedTransaction.getExpectationView(transactionList);
+            childViews.add(v);
+            expectedSum += expectedTransaction.value();
+        }
+
+
         if (childViews.isEmpty() && hideEmpty == HIDE_EMPTY) return null;
 
         layout = (RelativeLayout) transactionList.getLayoutInflater().inflate(R.layout.category_list_entry,null);
@@ -163,7 +175,9 @@ public class Category {
         });
 
         Button assignButton = (Button) layout.findViewById(R.id.assign_category_button);
-        assignButton.setText(definition+" ("+String.format("%.2f",sum/100.0)+" "+currency+")");
+        String text = definition+" ("+String.format("%.2f",sum/100.0);
+        if (expectedSum!=0) text+=" / "+String.format("%.2f",expectedSum/100.0);
+        assignButton.setText(text+" "+currency+")");
         assignButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -184,6 +198,7 @@ public class Category {
             }
         });
         transactions.clear();
+        expectedTransactions.clear();
         return layout;
     }
 
@@ -238,11 +253,20 @@ public class Category {
         transactions.add(transaction);
     }
 
+    public void addExpectedTransaction(Transaction transaction) {
+        expectedTransactions.add(transaction);
+    }
+
+
     public String name() {
         return definition;
     }
 
     public String full() {
         return (parent_id!=0?Category.load(parent_id).full()+"/":"")+name();
+    }
+
+    public int getExpectedSum() {
+        return expectedSum;
     }
 }

@@ -89,6 +89,11 @@ public class Participant {
         return name;
     }
 
+    @Override
+    public String toString() {
+        return name();
+    }
+
     public double compare(Participant participant) {
         return compareName(participant) * compareNumber(participant);
     }

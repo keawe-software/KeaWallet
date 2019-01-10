@@ -177,4 +177,8 @@ public class Globals {
         return new DBHelper().getReadableDatabase();
     }
 
+    public static int color(int color_id){
+        return context().getResources().getColor(color_id);
+    }
+
 }

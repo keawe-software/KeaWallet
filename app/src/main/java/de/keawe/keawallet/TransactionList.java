@@ -1,9 +1,15 @@
 package de.keawe.keawallet;
 
+import android.annotation.SuppressLint;
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
@@ -11,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Stack;
@@ -74,6 +81,14 @@ public class TransactionList extends AppCompatActivity {
             }
         });
 
+     /*   ImageButton analyzeBtn = (ImageButton)findViewById(R.id.analyzeButton);
+        analyzeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                analyze();
+            }
+        });*/
+
         final Spinner accountDropdown = (Spinner) findViewById(R.id.account_selector);
         accountDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -88,7 +103,57 @@ public class TransactionList extends AppCompatActivity {
         });
 
         month = Calendar.getInstance();
+    }
 
+    private void analyze() {
+        Toast.makeText(this,"Analyze has been disabled for security reasons.",Toast.LENGTH_LONG).show();
+        if (2>1) return; //*/
+        Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
+        if (!(item instanceof BankAccount)) return;
+        BankAccount account = (BankAccount) item;
+        Vector<Transaction> transactionsOfVirtualAccount = Transaction.getLastFor(0);
+        if (transactionsOfVirtualAccount.isEmpty()) {
+            Toast.makeText(this,"Set bank account null for all transactions of "+account,Toast.LENGTH_LONG).show();
+            Transaction.reassign(account.id(),0);
+            changeMonth(0);
+        } else {
+            Transaction transaction = Transaction.first(0);
+            if (transaction != null) {
+                transaction.setCategory(null, false);
+                transaction.setMostSimilar(null);
+                transaction.setAccount(account);
+                Long transactionTimeStamp = transaction.bdate();
+                long day = 24*3600*1000;
+
+                Vector<Transaction> categorizedTransactions = Transaction.loadCategorized(account.id());
+                long dateLimit35 = transactionTimeStamp - 35 * day; // timestamp dating back 35 days before transaction
+                long dateLimit65 = transactionTimeStamp - 65 * day; // timestamp dating back 65 days before transaction
+
+                Vector<Transaction>transactions35 = new Vector<>();
+                Vector<Transaction>transactions65 = new Vector<>();
+                Vector<Transaction>olderTransactions = new Vector<>();
+
+                for (Transaction t:categorizedTransactions){
+                    if (t.bdate() > dateLimit35){
+                        transactions35.add(t);
+                    } else if (t.bdate() > dateLimit65){
+                        transactions65.add(t);
+                    } else olderTransactions.add(t);
+                }
+
+                FetchTransactions.recognizeTransaction(transaction, transactions35); // compare with transactions of the last 35 days
+                if (transaction.category()==null) FetchTransactions.recognizeTransaction(transaction, transactions65); // compare with transactions of the last 65 days
+                if (transaction.category()==null) FetchTransactions.recognizeTransaction(transaction, olderTransactions); // compare with remaining transactions
+
+                if (transaction.category()!= null) { // we found a similar transaction and assigned a category.
+                    Toast.makeText(this, "Category „" + transaction.category().name() + "“ assigned to " + transaction.participant()+"/"+transaction.firstLine(), Toast.LENGTH_LONG).show();
+                }
+
+                month.setTimeInMillis(transactionTimeStamp);
+                changeMonth(0);
+                if (Transaction.first(0) == null) System.out.println("#### THIS WAS THE LAST TRANSACTION FROM THE NULL-ACCOUNT! ###");
+            }
+        }
     }
 
     private void gotoAddAccount() {
@@ -127,9 +192,8 @@ public class TransactionList extends AppCompatActivity {
     public void changeMonth(int months){
         month.add(Calendar.MONTH,months); // add or subtract the number of months
         Calendar now = Calendar.getInstance();
-        now.add(Calendar.MONTH,-1);
+        //now.add(Calendar.MONTH,-1);
         findViewById(R.id.right_button).setVisibility(month.after(now)?View.GONE:View.VISIBLE);
-
 
         setTitle(getString(R.string.app_name)+" - "+Globals.yearDate(month));
 
@@ -140,32 +204,51 @@ public class TransactionList extends AppCompatActivity {
         Object item = ((Spinner) findViewById(R.id.account_selector)).getSelectedItem();
         if (!(item instanceof BankAccount)) return;
         BankAccount account = (BankAccount) item;
-        Vector<Transaction> transactions = account.transactions(month);
         String currency = null;
         Stack<Transaction> unassignedtransactions = new Stack<>();
-        for (Transaction transaction:transactions){
-            Category cat = transaction.category();
-            if (cat == null) {
-                unassignedtransactions.push(transaction);
-                continue;
+
+        { // add assigned transactions to categories
+            Vector<Transaction> transactions = account.transactions(month);
+            for (Transaction transaction : transactions) {
+                Category cat = transaction.category();
+                if (currency == null) currency = transaction.currency();
+                if (cat == null) {
+                    unassignedtransactions.push(transaction);
+                    continue;
+                }
+                cat.addTransaction(transaction);
             }
-            if (currency == null) currency=transaction.currency();
-            cat.addTransaction(transaction);
+
+            if (!transactions.isEmpty()){ // display current account balance
+                TextView balance = (TextView) findViewById(R.id.current_balance);
+                String saldo = transactions.lastElement().getSaldo();
+                if (saldo == null) saldo = Globals.string(R.string.unknown_saldo);
+                balance.setText(getString(R.string.current_balance).replace("?", saldo));
+            }
         }
 
-        TextView balance = (TextView) findViewById(R.id.current_balance);
-        if (!transactions.isEmpty()) balance.setText(getString(R.string.current_balance).replace("?",transactions.lastElement().getSaldo()));
+        { // add expected transactions to categories
+            Vector<Transaction> expectedTransactions = account.expectedTransactions(month);
+            for (Transaction transaction : expectedTransactions){
+                Category cat = transaction.category();
+                if (currency == null) currency = transaction.currency();
+                if (cat == null) continue;
+                cat.addExpectedTransaction(transaction);
+            }
+        }
+
+
+        if (!unassignedtransactions.isEmpty() && categoryForFirstTransaction != null) { // unassigned transactions present and category provided:
+            Transaction transaction = unassignedtransactions.pop(); // get first unassigned transaction and assign to category
+            transaction.setCategory(categoryForFirstTransaction);
+            categoryForFirstTransaction.addTransaction(transaction);
+        }
 
         LinearLayout display = (LinearLayout) findViewById(R.id.first_uncategorized_transaction);
         display.removeAllViews();
 
         View infoButton = findViewById(R.id.transaction_info);
 
-        if (!unassignedtransactions.isEmpty() && categoryForFirstTransaction != null) {
-            Transaction transaction = unassignedtransactions.pop();
-            transaction.setCategory(categoryForFirstTransaction);
-            categoryForFirstTransaction.addTransaction(transaction);
-        }
         if (unassignedtransactions.isEmpty()) {
             infoButton.setVisibility(View.GONE);
         } else {
@@ -185,17 +268,24 @@ public class TransactionList extends AppCompatActivity {
         list.removeAllViews();
 
         boolean noContent = true;
+        int expectedSum = 0;
         for (Category cat : root_categories) {
             RelativeLayout view = cat.getView(this,currency,hideEmpty);
             if (view != null) {
                 list.addView(view);
                 noContent = false;
+                expectedSum += cat.getExpectedSum();
             }
         }
+        TextView tv = (TextView) findViewById(R.id.expected_sum);
         if (noContent) {
             TextView text = new TextView(this);
             text.setText(R.string.no_transaction_found);
             list.addView(text);
+            tv.setText("");
+        } else {
+            String text = (expectedSum == 0)?"":Globals.string(R.string.expected_sum).replace("?",String.format("%.2f",expectedSum/100.0)+" "+currency);
+            tv.setText(text);
         }
     }
 }

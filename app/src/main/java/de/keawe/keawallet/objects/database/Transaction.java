@@ -145,6 +145,19 @@ public class Transaction implements Serializable {
         return transactions;
     }
 
+    public static Vector<Transaction> getExpectedFor(BankAccount account, Calendar month) {
+        String searchKey = Globals.yearDate(month);
+
+        SQLiteDatabase db = Globals.readableDatabase();
+
+        Vector<Transaction> transactions = new Vector<>();
+        Cursor cursor = db.query(TABLE_NAME, null, ACCOUNT + " = ? AND exp_repeat = ?", new String[]{"" + account.id(), searchKey}, null, null,KEY);
+        while (cursor.moveToNext()) transactions.add(new Transaction(cursor,account));
+        cursor.close();
+        db.close();
+        return transactions;
+    }
+
     public static void reassign(long fromAccountId, long toAccountId) {
         BankAccount fromAccount = BankAccount.load(fromAccountId);
         BankAccount toAccount = BankAccount.load(toAccountId);
@@ -283,6 +296,12 @@ public class Transaction implements Serializable {
         return sb.toString().trim();
     }
 
+    public String firstLine(){
+        String parts[] = niceUsage().split("\n");
+        if (parts.length>0) return parts[0];
+        return null;
+    }
+
     public String value(String currency) {
         return String.format("%.2f",value/100.0)+" "+currency;
     }
@@ -302,10 +321,10 @@ public class Transaction implements Serializable {
 
     public void setCategory(Category cat, boolean auto) {
         if (cat == null){
-            if (category == 0l) System.out.println("Removing category from "+this.niceUsage());
+            //if (category == 0l) System.out.println("Removing category from "+this.niceUsage());
             category = 0l;
         } else {
-            if (category == null || category != cat.getId()) System.out.println("Assigning category '"+cat.full()+"' with "+this.niceUsage());
+            //if (category == null || category != cat.getId()) System.out.println("Assigning category '"+cat.full()+"' with "+this.niceUsage());
             category = cat.getId();
         }
         auto_cat = auto;
@@ -318,7 +337,7 @@ public class Transaction implements Serializable {
     }
 
     public void setAccount(BankAccount bankAccount){
-        System.out.println("Assigning transaction to "+bankAccount);
+        //System.out.println("Assigning transaction to "+bankAccount);
         account = bankAccount;
         ContentValues values = new ContentValues();
         values.put(ACCOUNT,account.id());
@@ -348,6 +367,27 @@ public class Transaction implements Serializable {
         return layout;
     }
 
+    public RelativeLayout getExpectationView(final Activity activity) {
+        RelativeLayout layout = (RelativeLayout) activity.getLayoutInflater().inflate(R.layout.transaction_display,null);
+        int gray = Globals.color(R.color.gray);
+        TextView tv = ((TextView) layout.findViewById(R.id.transaction_date_view));
+        tv.setText(Globals.string(R.string.expected));
+        tv.setTextColor(gray);
+        tv.setMinWidth(200);
+        tv = ((TextView) layout.findViewById(R.id.transaction_usage_view));
+        tv.setText(firstLine());
+        tv.setTextColor(gray);
+        tv = ((TextView) layout.findViewById(R.id.transaction_value_view));
+        tv.setText(value(account.currency()));
+        tv.setTextColor(gray);
+        tv = ((TextView) layout.findViewById(R.id.transaction_participant_view));
+        tv.setText(participant()==null?"":participant().name());
+        tv.setTextColor(gray);
+        //layout.setBackgroundColor(Globals.context().getResources().getColor(R.color.yellow));
+        layout.findViewById(R.id.category_warning).setVisibility(View.GONE);
+        return layout;
+    }
+
     public String bdate(String format) {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(new Date(bdate()));
@@ -362,14 +402,10 @@ public class Transaction implements Serializable {
     }
 
     public Transaction findMostSimilarIn(Vector<Transaction> transactionList) {
-        System.out.println("Got "+this);
-        System.out.println("Comparing: ");
         double similarity = 0;
         Transaction result = null;
         for(Transaction transaction:transactionList) {
             double sim = this.compare(transaction);
-            long dayDiff = (this.bdate - transaction.bdate) / (24 * 3600 * 1000);
-            System.out.println(" - Transaction "+transaction.id+" ("+dayDiff+" days before current transaction): "+sim);
             if (sim >= similarity) {
                 similarity = sim;
                 result = transaction;
@@ -434,10 +470,10 @@ public class Transaction implements Serializable {
 
     public void setMostSimilar(Transaction similarTransaction) {
         if (similarTransaction == null){
-            System.out.println("Resetting similar transaction.");
+            //System.out.println("Resetting similar transaction.");
             similar = null;
         } else {
-            System.out.println("Storing most similar transaction "+similarTransaction.id());
+            //System.out.println("Storing most similar transaction: "+similarTransaction.id());
             similar = similarTransaction.id;
         }
 

@@ -145,6 +145,10 @@ public class BankAccount {
         return Transaction.getFor(this,month);
     }
 
+    public Vector<Transaction> expectedTransactions(Calendar month) {
+        return Transaction.getExpectedFor(this,month);
+    }
+
     public String currency() {
         switch (currency){
             case "EUR": return "€";

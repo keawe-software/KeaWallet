@@ -56,13 +56,17 @@ public class FetchTransactions extends AppCompatActivity {
 
     public static void recognizeTransaction(Transaction transaction, Vector<Transaction> categorizedTransactions){
         Transaction similarTransaction = transaction.findMostSimilarIn(categorizedTransactions);
-        if (similarTransaction != null && transaction.compare(similarTransaction) > 0.0001) { // transaction is sufficiently similar
+        if (similarTransaction != null && transaction.compare(similarTransaction) > 0.00005) { // transaction is sufficiently similar
             transaction.setMostSimilar(similarTransaction); // add a reference to the similar transaction
             Category category = similarTransaction.category(); // get the category from the similar transaction
             transaction.setCategory(category,true); // assign that category to the new transaction
             long dayDiff = (transaction.bdate() - similarTransaction.bdate()) / (1000 * 3600 * 24); // time difference between new transaction and similar (in days)
             Calendar expectedDate = Calendar.getInstance(); // prepare expectedDate
             expectedDate.setTimeInMillis(transaction.bdate());
+
+            if (Globals.yearDate(expectedDate).equals(similarTransaction.expectedRepetition())){ // the similar transaction expected to be repeated at the time of the transaction.
+                similarTransaction.expectRepetition(null); // thus, the expection is fullfilled and gets erased
+            }
 
             if (dayDiff>25 && dayDiff<37) {
                 expectedDate.add(Calendar.MONTH,1); // similar transaction was about a month ago

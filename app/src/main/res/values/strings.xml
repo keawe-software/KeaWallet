@@ -78,6 +78,9 @@
     <string name="category_rent">Rent</string>
     <string name="category_electricity">Electricity</string>
     <string name="category_liability">Liability</string>
-    <string name="current_balance">Current balance: ?</string>
+    <string name="current_balance">Balance: ?</string>
     <string name="expected_repetition">Expected repetition: ?</string>
+    <string name="expected">expected:</string>
+    <string name="unknown_saldo">unknwon</string>
+    <string name="expected_sum">/ expected transactions: ?</string>
 </resources>

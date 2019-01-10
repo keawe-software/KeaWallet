@@ -67,6 +67,9 @@
     <string name="category_rent">Miete</string>
     <string name="category_electricity">Strom</string>
     <string name="category_liability">Haftpflicht</string>
-    <string name="current_balance">Kontostand: ?</string>
+    <string name="current_balance">Konto: ?</string>
     <string name="expected_repetition">Erwartete Wiederholung: ?</string>
+    <string name="expected">erwartet:</string>
+    <string name="unknown_saldo">unbekannt</string>
+    <string name="expected_sum">/ erwartete Umsätze: ?</string>
 </resources>
